@@ -233,9 +233,7 @@ struct PopoverContentView: View {
 
             HStack(spacing: 4) {
                 // Settings
-                Button {
-                    openSettings()
-                } label: {
+                SettingsLink {
                     Image(systemName: "gear")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.tertiary)
@@ -353,17 +351,6 @@ struct PopoverContentView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Color.purple.opacity(0.05))
-    }
-
-    // MARK: - Actions
-
-    private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        if #available(macOS 14, *) {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        } else {
-            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-        }
     }
 
     // MARK: - Undo Toast

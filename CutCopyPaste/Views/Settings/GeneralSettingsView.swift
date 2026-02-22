@@ -6,6 +6,7 @@ struct GeneralSettingsView: View {
     @ObservedObject private var prefs = UserPreferences.shared
     @EnvironmentObject private var appState: AppState
     @State private var showClearConfirmation = false
+    @State private var showResetConfirmation = false
     @State private var loginError: String?
     @State private var exportStatus: String?
 
@@ -109,6 +110,13 @@ struct GeneralSettingsView: View {
                     Label("Clear All History", systemImage: "trash")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+
+                Button {
+                    showResetConfirmation = true
+                } label: {
+                    Label("Reset Settings to Defaults", systemImage: "arrow.counterclockwise")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             } header: {
                 Text("Data")
             }
@@ -121,6 +129,14 @@ struct GeneralSettingsView: View {
             }
         } message: {
             Text("This will delete all clipboard history except pinned items. This cannot be undone.")
+        }
+        .alert("Reset All Settings?", isPresented: $showResetConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Reset", role: .destructive) {
+                UserPreferences.shared.resetToDefaults()
+            }
+        } message: {
+            Text("This will restore all settings to their default values. Your clipboard history will not be affected.")
         }
     }
 

@@ -5,7 +5,7 @@ import SwiftData
 struct CutCopyPasteApp: App {
     let modelContainer: ModelContainer
     @StateObject private var appState: AppState
-    @ObservedObject private var prefs = UserPreferences.shared
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
     init() {
         let container: ModelContainer
@@ -63,7 +63,7 @@ struct CutCopyPasteApp: App {
                     height: appState.showDiffView ? 520 : appState.preferences.popoverHeight
                 )
                 .animation(Constants.Animation.snappy, value: appState.showDiffView)
-                .preferredColorScheme(prefs.appearanceMode.colorScheme)
+                .preferredColorScheme(appearanceMode.colorScheme)
         } label: {
             Image(systemName: "clipboard")
                 .symbolRenderingMode(.hierarchical)
@@ -74,14 +74,14 @@ struct CutCopyPasteApp: App {
         Settings {
             SettingsView()
                 .environmentObject(appState)
-                .preferredColorScheme(prefs.appearanceMode.colorScheme)
+                .preferredColorScheme(appearanceMode.colorScheme)
         }
 
         // Analytics window
         Window("Analytics", id: "analytics") {
             AnalyticsDashboardView()
                 .environmentObject(appState)
-                .preferredColorScheme(prefs.appearanceMode.colorScheme)
+                .preferredColorScheme(appearanceMode.colorScheme)
         }
         .defaultSize(width: 700, height: 500)
     }

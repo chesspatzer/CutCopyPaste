@@ -17,7 +17,13 @@ final class PasteStackManager: ObservableObject {
 
     @Published var items: [PasteStackItem] = []
     @Published var isActive: Bool = false
-    @Published var pasteMode: PasteMode = .queue
+    @Published var pasteMode: PasteMode {
+        didSet { UserPreferences.shared.pasteStackMode = pasteMode.rawValue }
+    }
+
+    init() {
+        self.pasteMode = PasteMode(rawValue: UserPreferences.shared.pasteStackMode) ?? .queue
+    }
 
     var depth: Int { items.count }
     var isEmpty: Bool { items.isEmpty }

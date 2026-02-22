@@ -22,7 +22,7 @@ struct ClipboardListView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: Constants.UI.cardSpacing) {
+                LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
                     ForEach(items) { item in
                         ClipboardItemRow(
                             item: item,
@@ -54,8 +54,8 @@ struct ClipboardListView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.horizontal, displayMode == .compact ? 6 : 10)
+                .padding(.vertical, displayMode == .compact ? 4 : 6)
             }
             .scrollIndicators(.hidden)
             .onKeyPress(.upArrow) {

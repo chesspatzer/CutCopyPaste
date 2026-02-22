@@ -110,4 +110,29 @@ final class UserPreferences: ObservableObject {
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
 
     private init() {}
+
+    // MARK: - Reset
+
+    func resetToDefaults() {
+        // Explicitly set @AppStorage properties back to their declared defaults
+        maxHistoryCount = 500
+        retentionDays = 30
+        deduplicateConsecutive = true
+        appearanceMode = .system
+        displayMode = .comfortable
+        popoverWidth = 400
+        popoverHeight = 560
+        showSourceApp = true
+        showTimestamps = true
+        globalToggleKeyCode = 9
+        globalToggleModifiers = 0x000900
+        excludedBundleIDsRaw = ""
+        detectSensitiveData = true
+        autoMaskSensitive = false
+        autoOCR = false
+        pasteStackMode = "queue"
+        launchAtLogin = false
+        playSoundOnCopy = false
+        objectWillChange.send()
+    }
 }

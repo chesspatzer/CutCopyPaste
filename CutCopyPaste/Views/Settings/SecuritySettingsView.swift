@@ -16,6 +16,14 @@ struct SecuritySettingsView: View {
             }
 
             Section {
+                Toggle("Auto-extract text from images (OCR)", isOn: $preferences.autoOCR)
+            } header: {
+                Label("Image Processing", systemImage: "doc.text.viewfinder")
+            } footer: {
+                Text("Automatically runs OCR on captured images so their text is searchable. Uses Apple Vision — no data leaves your Mac.")
+            }
+
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Detected Patterns")
                         .font(.subheadline.weight(.medium))
