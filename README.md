@@ -76,7 +76,7 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 ### Diff & Merge
 - **Compare**: Hover any item and click the compare button to select it — a floating bar appears showing selection progress with a "Compare" button when ready
 - **Merge**: Click the merge button in the header to enter merge mode — selected items highlight purple, then merge with configurable separator
-- Side-by-side diff with color-coded additions/deletions and line numbers
+- **Side-by-side diff** with paired removed/added lines, character-level inline highlighting, line numbers, and column headers showing source app and time
 
 ### Paste Stack (Multi-Copy Mode)
 - Activate paste stack mode to queue up multiple copied items
