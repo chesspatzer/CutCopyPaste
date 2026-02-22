@@ -49,7 +49,7 @@ struct AppearanceSettingsView: View {
                             .font(.system(size: 12, weight: .medium, design: .monospaced))
                             .foregroundStyle(.secondary)
                     }
-                    Slider(value: $prefs.popoverWidth, in: 300...500, step: 10)
+                    Slider(value: $prefs.popoverWidth, in: 300...600, step: 10)
                         .tint(.accentColor)
 
                     HStack {
@@ -60,7 +60,7 @@ struct AppearanceSettingsView: View {
                             .font(.system(size: 12, weight: .medium, design: .monospaced))
                             .foregroundStyle(.secondary)
                     }
-                    Slider(value: $prefs.popoverHeight, in: 350...700, step: 10)
+                    Slider(value: $prefs.popoverHeight, in: 350...900, step: 10)
                         .tint(.accentColor)
                 }
             } header: {

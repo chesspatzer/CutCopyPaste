@@ -1,13 +1,18 @@
 import SwiftUI
 import AppKit
 
-/// Renders syntax-highlighted code using NSTextView via NSViewRepresentable.
-struct SyntaxHighlightedText: NSViewRepresentable {
+struct RenderedMarkdownView: NSViewRepresentable {
     let text: String
-    let language: String
     let maxHeight: CGFloat
+    let fontSize: CGFloat
 
     @Environment(\.colorScheme) private var colorScheme
+
+    init(text: String, maxHeight: CGFloat = 200, fontSize: CGFloat = 13) {
+        self.text = text
+        self.maxHeight = maxHeight
+        self.fontSize = fontSize
+    }
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -17,11 +22,12 @@ struct SyntaxHighlightedText: NSViewRepresentable {
         textView.isSelectable = true
         textView.drawsBackground = false
         textView.backgroundColor = .clear
-        textView.textContainerInset = NSSize(width: 4, height: 4)
+        textView.textContainerInset = NSSize(width: 6, height: 4)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.textContainer?.widthTracksTextView = true
         textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         scrollView.hasVerticalScroller = false
         scrollView.hasHorizontalScroller = false
@@ -34,31 +40,30 @@ struct SyntaxHighlightedText: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         let isDark = colorScheme == .dark
-        let attributed = SyntaxHighlighter.shared.highlight(text, language: language, isDark: isDark)
+        let attributed = MarkdownRenderer.shared.render(text, isDark: isDark, fontSize: fontSize)
         textView.textStorage?.setAttributedString(attributed)
+        // Force layout so the text view reports correct size
         textView.layoutManager?.ensureLayout(for: textView.textContainer!)
     }
 }
 
-/// A compact code preview with syntax highlighting, suitable for clipboard item rows.
-struct CodePreviewView: View {
+struct MarkdownPreviewView: View {
     let text: String
-    let language: String
     let lineLimit: Int
     let isCompact: Bool
 
     @Environment(\.colorScheme) private var colorScheme
 
     private var previewHeight: CGFloat {
-        isCompact ? 42 : 78
+        isCompact ? 48 : 90
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SyntaxHighlightedText(
+            RenderedMarkdownView(
                 text: previewText,
-                language: language,
-                maxHeight: previewHeight
+                maxHeight: previewHeight,
+                fontSize: isCompact ? 11 : 12
             )
             .frame(height: previewHeight)
             .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -67,8 +72,8 @@ struct CodePreviewView: View {
         .background {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(colorScheme == .dark
-                      ? Color.white.opacity(0.04)
-                      : Color.black.opacity(0.03))
+                      ? Color.white.opacity(0.03)
+                      : Color.black.opacity(0.02))
         }
     }
 

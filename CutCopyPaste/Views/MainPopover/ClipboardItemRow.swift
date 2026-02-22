@@ -32,6 +32,14 @@ struct ClipboardItemRow: View {
 
     private var isCompact: Bool { displayMode == .compact }
 
+    /// Check markdown status — uses persisted flag or falls back to live detection for older items
+    private var effectiveIsMarkdown: Bool {
+        if item.isMarkdown { return true }
+        if item.detectedLanguage != nil { return false }
+        guard let text = item.textContent, text.count >= 40 else { return false }
+        return MarkdownRenderer.isMarkdown(text)
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             // Drag handle (visible on hover)
@@ -175,6 +183,13 @@ struct ClipboardItemRow: View {
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
                     .background(Capsule().fill(Color.blue.opacity(0.08)))
+            } else if effectiveIsMarkdown {
+                Text("Markdown")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.purple.opacity(0.7))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(Color.purple.opacity(0.08)))
             }
 
             if showTimestamps {
@@ -385,6 +400,13 @@ struct ClipboardItemRow: View {
                     text: text,
                     language: lang,
                     lineLimit: isCompact ? 3 : 6,
+                    isCompact: isCompact
+                )
+            } else if effectiveIsMarkdown, let text = item.textContent, !item.isMasked {
+                // Rendered markdown preview
+                MarkdownPreviewView(
+                    text: text,
+                    lineLimit: isCompact ? 6 : 12,
                     isCompact: isCompact
                 )
             } else {

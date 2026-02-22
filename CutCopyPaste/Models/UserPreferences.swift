@@ -104,8 +104,8 @@ final class UserPreferences: ObservableObject {
 
     @AppStorage("appearanceMode") var appearanceMode: AppearanceMode = .system
     @AppStorage("displayMode") var displayMode: DisplayMode = .comfortable
-    @AppStorage("popoverWidth") var popoverWidth: Double = 400
-    @AppStorage("popoverHeight") var popoverHeight: Double = 560
+    @AppStorage("popoverWidth") var popoverWidth: Double = 420
+    @AppStorage("popoverHeight") var popoverHeight: Double = 750
     @AppStorage("showSourceApp") var showSourceApp: Bool = true
     @AppStorage("showTimestamps") var showTimestamps: Bool = true
 
@@ -134,7 +134,7 @@ final class UserPreferences: ObservableObject {
 
     // MARK: - OCR
 
-    @AppStorage("autoOCR") var autoOCR: Bool = false
+    @AppStorage("autoOCR") var autoOCR: Bool = true
 
     // MARK: - Snippets
 
@@ -168,8 +168,8 @@ final class UserPreferences: ObservableObject {
         deduplicateConsecutive = true
         appearanceMode = .system
         displayMode = .comfortable
-        popoverWidth = 400
-        popoverHeight = 560
+        popoverWidth = 420
+        popoverHeight = 750
         showSourceApp = true
         showTimestamps = true
         globalToggleKeyCode = 9
@@ -177,7 +177,7 @@ final class UserPreferences: ObservableObject {
         excludedBundleIDsRaw = ""
         detectSensitiveData = true
         autoMaskSensitive = false
-        autoOCR = false
+        autoOCR = true
         pasteStackMode = "queue"
         launchAtLogin = false
         playSoundOnCopy = false

@@ -94,9 +94,15 @@ final class ClipboardMonitor: ObservableObject {
             item.summary = TextSummarizer.shared.summarize(text).oneLiner
         }
 
-        // Detect programming language for syntax highlighting
+        // Detect markdown first — markdown documents contain code keywords
+        // in prose which causes false positives for language detection
         if let text = item.textContent {
-            item.detectedLanguage = SyntaxHighlighter.shared.detectLanguage(text)
+            item.isMarkdown = MarkdownRenderer.isMarkdown(text)
+
+            // Only detect programming language if not markdown
+            if !item.isMarkdown {
+                item.detectedLanguage = SyntaxHighlighter.shared.detectLanguage(text)
+            }
         }
 
         Task {

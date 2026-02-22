@@ -9,6 +9,13 @@ struct ItemDetailView: View {
         return TextSummarizer.shared.summarize(text)
     }
 
+    private var effectiveIsMarkdown: Bool {
+        if item.isMarkdown { return true }
+        if item.detectedLanguage != nil { return false }
+        guard let text = item.textContent, text.count >= 40 else { return false }
+        return MarkdownRenderer.isMarkdown(text)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -105,7 +112,35 @@ struct ItemDetailView: View {
                                 language: lang,
                                 maxHeight: 200
                             )
-                            .frame(maxHeight: 200)
+                            .frame(height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    // Rendered markdown preview
+                    if effectiveIsMarkdown, let text = item.textContent {
+                        Rectangle()
+                            .fill(Color.primary.opacity(0.06))
+                            .frame(height: 0.5)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Rendered Markdown")
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Text("Markdown")
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.purple.opacity(0.7))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Capsule().fill(Color.purple.opacity(0.08)))
+                            }
+                            RenderedMarkdownView(
+                                text: text,
+                                maxHeight: 300,
+                                fontSize: 12
+                            )
+                            .frame(height: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

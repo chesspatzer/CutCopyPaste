@@ -44,6 +44,9 @@ final class ClipboardItem {
     // Syntax highlighting — detected programming language
     var detectedLanguage: String?
 
+    // Markdown detection
+    var isMarkdown: Bool = false
+
     // Pin ordering for favorites panel
     var pinnedOrder: Int = 0
 

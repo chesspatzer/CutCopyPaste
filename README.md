@@ -61,7 +61,11 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 
 ### OCR (Image Text Extraction)
 - Extract text from any captured image using Apple's Vision framework
-- On-demand extraction via context menu, or enable auto-OCR for all images
+- **Auto-OCR enabled by default** — text is extracted automatically on capture
+- **Spatial-aware text reconstruction** — uses Vision bounding box data to preserve paragraph spacing and line structure
+- Confidence filtering removes low-quality OCR artifacts
+- Smart line joining heuristics: detects wrapped prose vs code vs lists
+- Consecutive duplicate removal and whitespace normalization
 - Extracted text becomes searchable alongside regular clipboard content
 - View and copy OCR results from the item detail overlay
 
@@ -128,6 +132,16 @@ Context-aware actions appear on hover based on content type:
 - Language badge displayed on each code snippet card
 - Full syntax-highlighted view in item detail overlay
 - Dark and light mode aware color schemes
+- Markdown detection runs before language detection to prevent false positives (e.g. README files with SQL keywords in prose)
+
+### Inline Markdown Rendering
+- Clipboard items containing markdown are automatically detected and rendered as styled text
+- **Score-based detection** — headings, code fences, bold, lists, links, blockquotes each contribute to a confidence score (threshold: 4+)
+- Rendered preview in clipboard item cards with purple "Markdown" badge
+- Full rendered markdown in item detail overlay (300px scrollable view)
+- Supports: headings (h1–h6), **bold**, *italic*, ~~strikethrough~~, `inline code`, fenced code blocks, bullet and numbered lists, blockquotes, links, images, horizontal rules
+- NSAttributedString-based rendering — no WebKit dependency, fully offline
+- Dark and light mode aware
 
 ### Regex Search
 - Toggle between natural language search and regex pattern matching
