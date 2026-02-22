@@ -170,24 +170,71 @@ actor StorageService {
             items = items.filter { $0.workspaceName == workspaceName }
         }
 
-        // Fuzzy text search
+        // Semantic + fuzzy text search
         if let query = searchIntent.textQuery, !query.isEmpty {
             let searchService = NaturalLanguageSearchService.shared
-            items = items.filter { item in
-                let fields = [item.textContent, item.sourceAppName, item.ocrText, item.summary, item.workspaceName]
-                return fields.compactMap { $0 }.contains { field in
-                    searchService.fuzzyScore(query: query, against: field) > 0.3
+            let semanticService = SemanticSearchService.shared
+
+            var scoredItems: [(item: ClipboardItem, score: Double)] = items.compactMap { item in
+                var semanticBest = 0.0
+                var fuzzyBest = 0.0
+
+                // Semantic scoring using pre-computed embedding vector
+                if let embeddingData = item.embeddingVector, semanticService.isAvailable {
+                    let itemVec = SemanticSearchService.dataToVector(embeddingData)
+                    semanticBest = semanticService.semanticScore(query: query, itemVector: itemVec)
                 }
+
+                // Fuzzy text matching as fallback/supplement
+                let textFields = [item.textContent, item.sourceAppName, item.ocrText, item.summary, item.workspaceName]
+                for field in textFields.compactMap({ $0 }) {
+                    let fuzzy = searchService.fuzzyScore(query: query, against: field)
+                    fuzzyBest = max(fuzzyBest, fuzzy)
+                }
+
+                // Semantic needs higher threshold (0.6) since low scores are noise;
+                // fuzzy/exact match uses lower threshold (0.3)
+                let bestScore = max(
+                    semanticBest >= 0.6 ? semanticBest : 0.0,
+                    fuzzyBest
+                )
+                guard bestScore > 0.3 else { return nil }
+                return (item, bestScore)
             }
-            // Sort by relevance
-            items.sort { a, b in
-                let scoreA = [a.textContent, a.sourceAppName].compactMap { $0 }.map { searchService.fuzzyScore(query: query, against: $0) }.max() ?? 0
-                let scoreB = [b.textContent, b.sourceAppName].compactMap { $0 }.map { searchService.fuzzyScore(query: query, against: $0) }.max() ?? 0
-                return scoreA > scoreB
-            }
+
+            scoredItems.sort { $0.score > $1.score }
+            items = scoredItems.map(\.item)
+
+            // Clear the cached query vector
+            semanticService.clearCache()
         }
 
         return items
+    }
+
+    // MARK: - Embedding Backfill
+
+    /// Populate embedding vectors for existing items that don't have one.
+    /// Called once on app launch for migration.
+    func backfillEmbeddings() {
+        let descriptor = FetchDescriptor<ClipboardItem>()
+        guard let items = try? modelContext.fetch(descriptor) else { return }
+
+        let semanticService = SemanticSearchService.shared
+        guard semanticService.isAvailable else { return }
+
+        var updated = 0
+        for item in items where item.embeddingVector == nil {
+            guard let text = item.textContent ?? item.ocrText else { continue }
+            if let vector = semanticService.computeEmbedding(for: text) {
+                item.embeddingVector = SemanticSearchService.vectorToData(vector)
+                updated += 1
+            }
+        }
+        if updated > 0 {
+            try? modelContext.save()
+            logger.info("Backfilled embeddings for \(updated) items")
+        }
     }
 
     // MARK: - Retention

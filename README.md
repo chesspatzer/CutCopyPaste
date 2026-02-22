@@ -20,9 +20,12 @@ A powerful macOS menubar clipboard manager built with SwiftUI and SwiftData. Run
 
 ### Smart Search
 - Full-text search across all content, OCR text, summaries, and metadata
+- **On-device semantic search** via Apple's NLEmbedding — finds "function" when you search "method", "error" when you search "exception"
+- Pre-computed embedding vectors at capture time for instant search (~8-16ms total)
 - **Natural language queries**: type "images from Xcode" or "links from yesterday" and the app understands
-- Fuzzy matching with programming-aware synonyms (function/method/def, variable/var/let, etc.)
-- Date-aware filters: "today", "last week", "3 hours ago"
+- Normalized matching handles separator differences (API_KEY matches "api key")
+- Fuzzy matching with programming-aware synonyms as fallback
+- Date-aware filters: "today", "last week", "five minutes ago" (word numbers supported)
 - Category tabs: All, Text, Images, Links, Pinned, Snippets
 
 ### Text Transforms (28+)
@@ -71,8 +74,9 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 - Usage tracking (most-used snippets rise to the top)
 
 ### Diff & Merge
-- **Compare**: Select any two text items to see a side-by-side diff with color-coded additions/deletions and line numbers
-- **Merge**: Select multiple items, pick a separator (newline, comma, tab, space, or custom), preview the result, and copy the merged text
+- **Compare**: Hover any item and click the compare button to select it — a floating bar appears showing selection progress with a "Compare" button when ready
+- **Merge**: Click the merge button in the header to enter merge mode — selected items highlight purple, then merge with configurable separator
+- Side-by-side diff with color-coded additions/deletions and line numbers
 
 ### Paste Stack (Multi-Copy Mode)
 - Activate paste stack mode to queue up multiple copied items
@@ -103,7 +107,7 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 - Most re-used items
 - Total item count and daily average
 
-Open from the ellipsis menu in the popover header.
+Open from the overflow menu (ellipsis) in the popover header.
 
 ### Text Summarization
 - Items longer than 200 characters get an automatic one-line summary
@@ -123,8 +127,13 @@ Context-aware actions appear on hover based on content type:
 ## UI
 
 - Menubar popover (400x560 default, resizable in settings)
-- Responsive category tab bar — selected tab expands with label, others show icon-only
-- Hover actions on each row: copy, pin, delete, and a transforms/actions menu
+- **Always-visible copy button** on every row — no guessing, just click to copy
+- Hover actions expand to show: compare, transforms/actions, pin, and delete
+- **Labeled tab bar** — all category tabs show both icon and label for clarity
+- **Dedicated header buttons** for Paste Stack and Merge mode (not hidden in a menu)
+- **"Actions" label** on the transform menu — no more cryptic wand icon
+- **Compare bar** appears when selecting items for diff, with clear "Compare" button
+- **Sensitive data tooltip** — hover the warning badge to see what type of sensitive data was detected
 - Metadata pills: timestamp, source app, workspace, character count, OCR badge
 - Overlay-based modals (no system sheet conflicts with menubar windows)
 - Color swatch preview for hex color strings

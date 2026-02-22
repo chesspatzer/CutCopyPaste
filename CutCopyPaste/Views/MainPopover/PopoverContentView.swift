@@ -62,6 +62,11 @@ struct PopoverContentView: View {
                     .transition(.opacity)
                 }
 
+                // Compare bar — shows when items selected for diff
+                if !appState.diffSelection.isEmpty {
+                    compareBar
+                }
+
                 // Merge floating button
                 if appState.isMergeMode && !appState.mergeSelection.isEmpty {
                     mergeBar
@@ -202,6 +207,44 @@ struct PopoverContentView: View {
             Spacer()
 
             HStack(spacing: 2) {
+                // Paste Stack toggle — always visible
+                Button {
+                    appState.pasteStackManager.isActive
+                    ? appState.pasteStackManager.deactivate()
+                    : appState.pasteStackManager.activate()
+                } label: {
+                    Image(systemName: "square.stack.3d.up")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(appState.pasteStackManager.isActive ? Color.purple : Color.secondary)
+                        .frame(width: 26, height: 26)
+                        .background {
+                            Circle()
+                                .fill(appState.pasteStackManager.isActive ? Color.purple.opacity(0.12) : Color.primary.opacity(0.04))
+                        }
+                }
+                .buttonStyle(.plain)
+                .help(appState.pasteStackManager.isActive ? "Exit Paste Stack" : "Paste Stack Mode")
+
+                // Merge mode toggle — always visible
+                Button {
+                    appState.isMergeMode.toggle()
+                    if !appState.isMergeMode {
+                        appState.clearMergeSelection()
+                    }
+                } label: {
+                    Image(systemName: "arrow.triangle.merge")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(appState.isMergeMode ? Color.purple : Color.secondary)
+                        .frame(width: 26, height: 26)
+                        .background {
+                            Circle()
+                                .fill(appState.isMergeMode ? Color.purple.opacity(0.12) : Color.primary.opacity(0.04))
+                        }
+                }
+                .buttonStyle(.plain)
+                .help(appState.isMergeMode ? "Exit Merge Mode" : "Merge Clips")
+
+                // Settings
                 Button {
                     openSettings()
                 } label: {
@@ -217,28 +260,8 @@ struct PopoverContentView: View {
                 .buttonStyle(.plain)
                 .help("Settings")
 
+                // Overflow menu — less frequent actions
                 Menu {
-                    Button {
-                        appState.pasteStackManager.isActive
-                        ? appState.pasteStackManager.deactivate()
-                        : appState.pasteStackManager.activate()
-                    } label: {
-                        Label(appState.pasteStackManager.isActive ? "Exit Paste Stack" : "Paste Stack Mode",
-                              systemImage: "square.stack.3d.up")
-                    }
-
-                    Button {
-                        appState.isMergeMode.toggle()
-                        if !appState.isMergeMode {
-                            appState.clearMergeSelection()
-                        }
-                    } label: {
-                        Label(appState.isMergeMode ? "Exit Merge Mode" : "Merge Clips",
-                              systemImage: "arrow.triangle.merge")
-                    }
-
-                    Divider()
-
                     Button {
                         NSApp.activate(ignoringOtherApps: true)
                         openWindow(id: "analytics")
@@ -270,6 +293,36 @@ struct PopoverContentView: View {
                 .help("More options")
             }
         }
+    }
+
+    // MARK: - Compare Bar
+
+    private var compareBar: some View {
+        HStack {
+            Image(systemName: "arrow.left.arrow.right")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.blue)
+            Text("\(appState.diffSelection.count) of 2 selected")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button("Clear") {
+                withAnimation(Constants.Animation.snappy) {
+                    appState.diffSelection.removeAll()
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            Button("Compare") {
+                appState.showDiffView = true
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(appState.diffSelection.count < 2)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.blue.opacity(0.05))
     }
 
     // MARK: - Merge Bar

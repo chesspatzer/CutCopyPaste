@@ -55,21 +55,17 @@ struct CategoryTabBar: View {
                     }
                 } label: {
                     let isSelected = selection == category
-                    HStack(spacing: 4) {
+                    HStack(spacing: 3) {
                         Image(systemName: category.systemImage)
                             .font(.system(size: 10, weight: .semibold))
-                        // Show label only for the selected tab to save space
-                        if isSelected {
-                            Text(category.displayName)
-                                .font(.system(size: 11, weight: .medium))
-                                .lineLimit(1)
-                                .fixedSize()
-                                .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
-                        }
+                        Text(category.displayName)
+                            .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+                            .lineLimit(1)
+                            .fixedSize()
                     }
-                    .padding(.horizontal, isSelected ? 10 : 8)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 6)
-                    .foregroundStyle(isSelected ? .primary : .tertiary)
+                    .foregroundStyle(isSelected ? .primary : .secondary)
                     .background {
                         if isSelected {
                             RoundedRectangle(cornerRadius: 7, style: .continuous)

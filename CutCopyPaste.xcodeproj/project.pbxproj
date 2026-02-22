@@ -81,6 +81,7 @@
 		CD91145D32221AE07254C786 /* CategoryTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E759CD1780B373A2C79D165B /* CategoryTabBar.swift */; };
 		CD9776EA3F2A36F075FAFDBE /* ClipboardItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3614CF7A5CE97D969C262985 /* ClipboardItemType.swift */; };
 		CDBD777BC111C3A41C3310E6 /* ClipboardItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3614CF7A5CE97D969C262985 /* ClipboardItemType.swift */; };
+		D1C3110AF7E589EFA9C22286 /* SemanticSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B99A93EE4124D5735F769F0F /* SemanticSearchService.swift */; };
 		D2416016E577750CC960165C /* WorkspaceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E57F3E761694DBC0E81EFE8 /* WorkspaceDetector.swift */; };
 		DA7DAE36B3824306688E5FDD /* CurlTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961ADB8D8943E416729E9B5D /* CurlTransform.swift */; };
 		E167AB490E09BDA829AF89B5 /* SnippetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EEB4EB0A06E0EC2D5FCBC1A /* SnippetService.swift */; };
@@ -173,6 +174,7 @@
 		B1C9943F5C991538A46C45F4 /* ClipboardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardListView.swift; sourceTree = "<group>"; };
 		B66898F1B2F0B20773F034E4 /* Date+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Formatting.swift"; sourceTree = "<group>"; };
 		B7A9532214AEDD5A0411CB42 /* Snippet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snippet.swift; sourceTree = "<group>"; };
+		B99A93EE4124D5735F769F0F /* SemanticSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticSearchService.swift; sourceTree = "<group>"; };
 		BD8D0DCFA9E7290BB9DE9AB2 /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
 		BE57BAE521DA4947AC2A76E1 /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
 		BF0FC28A94D8EF35B411BEAB /* KeyboardShortcutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutManager.swift; sourceTree = "<group>"; };
@@ -394,6 +396,7 @@
 				E1F9BC984102702EECA6A4FC /* OCRService.swift */,
 				A35F382CD7536F89C514389D /* PasteStackManager.swift */,
 				952F24FE44F18B4A5E0F91B0 /* QuickActionService.swift */,
+				B99A93EE4124D5735F769F0F /* SemanticSearchService.swift */,
 				5A58128E053DE0C561BE9B97 /* SensitiveDataDetector.swift */,
 				4EEB4EB0A06E0EC2D5FCBC1A /* SnippetService.swift */,
 				2386215C3A60CC8B83B274B2 /* StorageService.swift */,
@@ -615,6 +618,7 @@
 				EA69B424C6C70A5F01D8C347 /* SQLTransform.swift in Sources */,
 				BB508E14F1EB2C6AE208A5E8 /* SearchBarView.swift in Sources */,
 				4E157391471CA14BD71ADBD3 /* SecuritySettingsView.swift in Sources */,
+				D1C3110AF7E589EFA9C22286 /* SemanticSearchService.swift in Sources */,
 				61C453F801C562BC5EB57C04 /* SensitiveDataBadge.swift in Sources */,
 				6A9918AE10DA98D769281A30 /* SensitiveDataDetector.swift in Sources */,
 				5C4E416242422DC545920336 /* SettingsView.swift in Sources */,

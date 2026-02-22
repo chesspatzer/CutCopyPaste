@@ -117,6 +117,13 @@ final class ClipboardMonitor: ObservableObject {
                 }
             }
 
+            // Compute semantic embedding for search
+            if let text = item.textContent ?? item.ocrText {
+                if let vector = SemanticSearchService.shared.computeEmbedding(for: text) {
+                    item.embeddingVector = SemanticSearchService.vectorToData(vector)
+                }
+            }
+
             // Deduplication check
             if UserPreferences.shared.deduplicateConsecutive,
                await storageService.isDuplicateOfMostRecent(item.textContent, contentType: item.contentType) {

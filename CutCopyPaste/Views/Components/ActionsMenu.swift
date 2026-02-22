@@ -55,18 +55,22 @@ struct ActionsMenu: View {
                 }
             }
         } label: {
-            Image(systemName: "wand.and.stars")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-                .frame(width: 26, height: 26)
-                .background {
-                    Circle()
-                        .fill(Color.primary.opacity(0.06))
-                }
+            HStack(spacing: 3) {
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 11, weight: .medium))
+                Text("Actions")
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background {
+                Capsule()
+                    .fill(Color.primary.opacity(0.06))
+            }
         }
         .buttonStyle(.plain)
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
-        .frame(width: 26)
     }
 }

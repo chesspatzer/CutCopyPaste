@@ -14,6 +14,10 @@ struct ClipboardItemRow: View {
     @State private var isHovered = false
     @State private var justCopied = false
 
+    private var isSelectedForCompare: Bool {
+        appState.diffSelection.contains(where: { $0.id == item.id })
+    }
+
     private var displayText: String {
         if item.isMasked, let text = item.textContent {
             return String(repeating: "*", count: min(text.count, 40))
@@ -49,19 +53,56 @@ struct ClipboardItemRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Right side: hover actions or pin indicator
-            if isHovered {
-                hoverActions
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.8).combined(with: .opacity),
-                        removal: .opacity
-                    ))
-            } else if item.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.orange.opacity(0.5))
-                    .transition(.scale.combined(with: .opacity))
+            // Right side: always-visible copy + contextual actions on hover
+            HStack(spacing: 2) {
+                if isHovered {
+                    // Compare button on hover
+                    Button {
+                        appState.toggleDiffSelection(item)
+                    } label: {
+                        Image(systemName: isSelectedForCompare ? "arrow.left.arrow.right.circle.fill" : "arrow.left.arrow.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(isSelectedForCompare ? .blue : .secondary)
+                            .frame(width: 26, height: 26)
+                            .background {
+                                Circle()
+                                    .fill(isSelectedForCompare ? Color.blue.opacity(0.1) : Color.primary.opacity(0.06))
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .help(isSelectedForCompare ? "Deselect for Compare" : "Compare")
+
+                    // Transform actions
+                    if item.textContent != nil || item.contentType == .image {
+                        ActionsMenu(item: item)
+                    }
+
+                    PinButton(isPinned: item.isPinned, action: onPin)
+
+                    DeleteButton(action: onDelete)
+                }
+
+                // Copy button always visible
+                CopyButton(action: {
+                    onCopy()
+                    withAnimation(Constants.Animation.bouncy) {
+                        justCopied = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        withAnimation(Constants.Animation.smooth) {
+                            justCopied = false
+                        }
+                    }
+                })
+                .opacity(isHovered ? 1.0 : 0.4)
+
+                if !isHovered && item.isPinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.orange.opacity(0.5))
+                }
             }
+            .transition(.opacity)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, displayMode == .compact
@@ -111,32 +152,6 @@ struct ClipboardItemRow: View {
         }
     }
 
-    // MARK: - Hover Actions
-
-    private var hoverActions: some View {
-        HStack(spacing: 2) {
-            if item.textContent != nil || item.contentType == .image {
-                ActionsMenu(item: item)
-            }
-
-            CopyButton(action: {
-                onCopy()
-                withAnimation(Constants.Animation.bouncy) {
-                    justCopied = true
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    withAnimation(Constants.Animation.smooth) {
-                        justCopied = false
-                    }
-                }
-            })
-
-            PinButton(isPinned: item.isPinned, action: onPin)
-
-            DeleteButton(action: onDelete)
-        }
-    }
-
     // MARK: - Metadata Row
 
     @ViewBuilder
@@ -181,6 +196,8 @@ struct ClipboardItemRow: View {
     private var backgroundColor: Color {
         if justCopied {
             return Color.green.opacity(0.05)
+        } else if isSelectedForCompare {
+            return Color.blue.opacity(0.06)
         } else if appState.mergeSelection.contains(item.id) {
             return Color.purple.opacity(0.08)
         } else if isSelected {

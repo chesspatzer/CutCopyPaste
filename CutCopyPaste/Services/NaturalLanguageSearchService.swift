@@ -29,6 +29,21 @@ final class NaturalLanguageSearchService {
         "config":    ["configuration", "settings", "preferences", "env"],
     ]
 
+    // MARK: - Word-to-Number Mapping
+
+    private static let wordNumbers: [String: Int] = [
+        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+        "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+        "eleven": 11, "twelve": 12, "fifteen": 15, "twenty": 20,
+        "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60,
+        "a": 1, "an": 1,
+    ]
+
+    private func parseNumber(_ str: String) -> Int? {
+        if let n = Int(str) { return n }
+        return Self.wordNumbers[str.lowercased()]
+    }
+
     // MARK: - Intent Parsing
 
     func parseIntent(from query: String) -> SearchIntent {
@@ -85,9 +100,6 @@ final class NaturalLanguageSearchService {
                 guard let monthAgo = calendar.date(byAdding: .month, value: -1, to: now) else { return nil }
                 return (monthAgo, now)
             }),
-            ("(\\d+)\\s+(?:days?|hours?|minutes?)\\s+ago", {
-                nil // Handled separately below
-            }),
         ]
 
         for (pattern, resolver) in datePatterns {
@@ -102,15 +114,15 @@ final class NaturalLanguageSearchService {
             }
         }
 
-        // Relative time: "N days/hours/minutes ago"
+        // Relative time: "N days/hours/minutes ago" — supports digits and word numbers
         if intent.dateRange == nil {
-            let relPattern = "(\\d+)\\s+(days?|hours?|minutes?)\\s+ago"
+            let relPattern = "(\\d+|\\w+)\\s+(days?|hours?|minutes?|mins?)\\s+ago"
             if let regex = try? NSRegularExpression(pattern: relPattern),
                let match = regex.firstMatch(in: remaining, range: NSRange(remaining.startIndex..., in: remaining)),
                let fullRange = Range(match.range, in: remaining),
                let numRange = Range(match.range(at: 1), in: remaining),
                let unitRange = Range(match.range(at: 2), in: remaining),
-               let num = Int(remaining[numRange]) {
+               let num = parseNumber(String(remaining[numRange])) {
                 let unit = String(remaining[unitRange])
                 let component: Calendar.Component
                 if unit.hasPrefix("day") { component = .day }
@@ -138,16 +150,44 @@ final class NaturalLanguageSearchService {
         let q = query.lowercased()
         let t = text.lowercased()
 
-        // Exact match
+        // Tier 1: Exact substring match
         if t.contains(q) { return 1.0 }
 
-        // Synonym expansion
-        let expandedTerms = expandWithSynonyms(q)
-        for term in expandedTerms {
-            if t.contains(term) { return 0.9 }
+        // Tier 1b: Normalized match — treat separators (spaces, _, -, .) as equivalent
+        let qNorm = q.folding(options: .diacriticInsensitive, locale: nil)
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber }).joined(separator: " ")
+        let tNorm = t.folding(options: .diacriticInsensitive, locale: nil)
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber }).joined(separator: " ")
+        if tNorm.contains(qNorm) { return 0.95 }
+
+        // Tier 1c: All query words present in text (any order, any separator)
+        let queryWords = qNorm.split(separator: " ")
+        if queryWords.count > 1 {
+            let textWords = Set(tNorm.split(separator: " ").map(String.init))
+            if queryWords.allSatisfy({ word in textWords.contains(where: { $0.contains(word) }) }) {
+                return 0.9
+            }
         }
 
-        // Bigram similarity
+        // Tier 2: Synonym expansion (manual dictionary)
+        let expandedTerms = expandWithSynonyms(q)
+        for term in expandedTerms {
+            if t.contains(term) { return 0.85 }
+        }
+
+        // Tier 3: Word-level NLEmbedding for single-word queries
+        let semanticService = SemanticSearchService.shared
+        if semanticService.isAvailable {
+            if queryWords.count == 1, let queryWord = queryWords.first {
+                let textTokens = Set(tNorm.split(separator: " ").map(String.init))
+                let bestWordScore = textTokens.map {
+                    semanticService.wordSemanticScore(queryWord: String(queryWord), targetWord: $0)
+                }.max() ?? 0.0
+                if bestWordScore > 0.7 { return bestWordScore * 0.8 }
+            }
+        }
+
+        // Tier 4: Bigram similarity as final fallback
         return bigramSimilarity(q, t)
     }
 

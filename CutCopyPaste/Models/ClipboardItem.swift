@@ -38,6 +38,9 @@ final class ClipboardItem {
     var workspaceName: String?
     var workspaceType: String?
 
+    // Semantic search embedding (NLEmbedding sentence vector)
+    var embeddingVector: Data?
+
     @Transient
     var preview: String {
         switch contentType {

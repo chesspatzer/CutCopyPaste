@@ -85,7 +85,7 @@ final class AppState: ObservableObject {
         // Initial load
         refreshItems()
 
-        // Seed built-in data
+        // Seed built-in data and backfill embeddings for existing items
         Task {
             if !preferences.snippetsSeeded {
                 await snippetService.seedBuiltInSnippets()
@@ -93,6 +93,7 @@ final class AppState: ObservableObject {
                 preferences.snippetsSeeded = true
             }
             await refreshSnippets()
+            await storageService.backfillEmbeddings()
         }
     }
 
