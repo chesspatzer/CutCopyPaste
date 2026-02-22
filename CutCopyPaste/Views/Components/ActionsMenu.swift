@@ -7,34 +7,6 @@ struct ActionsMenu: View {
 
     var body: some View {
         Menu {
-            let transforms = TransformService.shared.applicableTransforms(for: item)
-            if !transforms.isEmpty {
-                Section("Transform") {
-                    ForEach(transforms, id: \.id) { transform in
-                        Button {
-                            appState.applyTransform(transform, to: item)
-                        } label: {
-                            Label(transform.name, systemImage: transform.iconSystemName)
-                        }
-                    }
-                }
-            }
-
-            let actions = QuickActionService.shared.applicableActions(for: item)
-            if !actions.isEmpty {
-                Section("Quick Actions") {
-                    ForEach(actions, id: \.id) { action in
-                        Button {
-                            if let result = action.execute(item: item) {
-                                appState.copyText(result)
-                            }
-                        } label: {
-                            Label(action.name, systemImage: action.iconSystemName)
-                        }
-                    }
-                }
-            }
-
             // Copy as... formats
             if let text = item.textContent {
                 Section("Copy as...") {
@@ -86,6 +58,34 @@ struct ActionsMenu: View {
                     ShareService.shared.exportToFile(item)
                 } label: {
                     Label("Export to File...", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            let transforms = TransformService.shared.applicableTransforms(for: item)
+            if !transforms.isEmpty {
+                Section("Transform") {
+                    ForEach(transforms, id: \.id) { transform in
+                        Button {
+                            appState.applyTransform(transform, to: item)
+                        } label: {
+                            Label(transform.name, systemImage: transform.iconSystemName)
+                        }
+                    }
+                }
+            }
+
+            let actions = QuickActionService.shared.applicableActions(for: item)
+            if !actions.isEmpty {
+                Section("Quick Actions") {
+                    ForEach(actions, id: \.id) { action in
+                        Button {
+                            if let result = action.execute(item: item) {
+                                appState.copyText(result)
+                            }
+                        } label: {
+                            Label(action.name, systemImage: action.iconSystemName)
+                        }
+                    }
                 }
             }
 

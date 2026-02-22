@@ -108,11 +108,7 @@ struct ClipboardListView: View {
             onCopy: { onCopy(item) },
             onAutoPaste: { onAutoPaste(item) },
             onPin: { onPin(item) },
-            onDelete: {
-                withAnimation(Constants.Animation.snappy) {
-                    onDelete(item)
-                }
-            }
+            onDelete: { onDelete(item) }
         )
         .id(item.id)
     }

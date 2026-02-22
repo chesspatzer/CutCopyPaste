@@ -132,6 +132,10 @@ final class UserPreferences: ObservableObject {
     @AppStorage("detectSensitiveData") var detectSensitiveData: Bool = true
     @AppStorage("autoMaskSensitive") var autoMaskSensitive: Bool = false
 
+    // MARK: - AI Search
+
+    @AppStorage("useLLMSearch") var useLLMSearch: Bool = true
+
     // MARK: - OCR
 
     @AppStorage("autoOCR") var autoOCR: Bool = true
@@ -140,10 +144,6 @@ final class UserPreferences: ObservableObject {
 
     @AppStorage("snippetsSeeded") var snippetsSeeded: Bool = false
     @AppStorage("snippetsSeededV2") var snippetsSeededV2: Bool = false
-
-    // MARK: - Paste Stack
-
-    @AppStorage("pasteStackMode") var pasteStackMode: String = "queue"
 
     // MARK: - Launch
 
@@ -178,8 +178,8 @@ final class UserPreferences: ObservableObject {
         excludedBundleIDsRaw = ""
         detectSensitiveData = true
         autoMaskSensitive = false
+        useLLMSearch = true
         autoOCR = true
-        pasteStackMode = "queue"
         launchAtLogin = false
         playSoundOnCopy = false
         timeGroupedHistory = true

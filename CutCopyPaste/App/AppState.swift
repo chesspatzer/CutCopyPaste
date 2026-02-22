@@ -12,10 +12,12 @@ final class AppState: ObservableObject {
     let shortcutManager: KeyboardShortcutManager
     let exclusionManager = ExclusionListManager()
 
+    /// Main-context handle for delete operations — avoids @ModelActor cross-context detachment crashes
+    private let mainContext: ModelContext
+
     // Feature Services
     let transformService = TransformService.shared
     let snippetService: SnippetService
-    let pasteStackManager = PasteStackManager()
     let ruleEngine: ClipboardRuleEngine
     let analyticsService: AnalyticsService
     let naturalLanguageSearch = NaturalLanguageSearchService.shared
@@ -30,11 +32,6 @@ final class AppState: ObservableObject {
     @Published var diffSelection: [ClipboardItem] = []
     @Published var showDiffView: Bool = false
 
-    // UI State — Merge
-    @Published var mergeSelection: Set<UUID> = []
-    @Published var showMergeView: Bool = false
-    @Published var isMergeMode: Bool = false
-
     // UI State — Snippets
     @Published var snippets: [Snippet] = []
     @Published var snippetFolders: [SnippetFolder] = []
@@ -48,7 +45,7 @@ final class AppState: ObservableObject {
     @Published var ocrResultItem: ClipboardItem? = nil
 
     // UI State — Undo delete
-    @Published var lastDeletedItem: ClipboardItem? = nil
+    @Published var lastDeletedSnapshot: ClipboardItemSnapshot? = nil
     @Published var showUndoToast: Bool = false
 
     // UI State — Onboarding
@@ -79,6 +76,7 @@ final class AppState: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init(modelContainer: ModelContainer) {
+        self.mainContext = modelContainer.mainContext
         let storage = StorageService(modelContainer: modelContainer)
         self.storageService = storage
         self.clipboardMonitor = ClipboardMonitor(
@@ -90,8 +88,7 @@ final class AppState: ObservableObject {
         self.ruleEngine = ClipboardRuleEngine(modelContainer: modelContainer)
         self.analyticsService = AnalyticsService(modelContainer: modelContainer)
 
-        // Wire up paste stack and rule engine to monitor
-        clipboardMonitor.pasteStackManager = pasteStackManager
+        // Wire up rule engine to monitor
         clipboardMonitor.ruleEngine = ruleEngine
 
         // Start monitoring clipboard
@@ -174,7 +171,7 @@ final class AppState: ObservableObject {
                         }
                     }
                 } else {
-                    let intent = naturalLanguageSearch.parseIntent(from: searchText)
+                    let intent = await naturalLanguageSearch.parseIntentAsync(from: searchText)
                     items = await storageService.fetchItems(
                         filterType: filter,
                         searchIntent: intent,
@@ -294,35 +291,38 @@ final class AppState: ObservableObject {
 
     func deleteItem(_ item: ClipboardItem) {
         NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
-        lastDeletedItem = item
+
+        // Snapshot item data for undo before deleting
+        let snapshot = ClipboardItemSnapshot(item)
+        lastDeletedSnapshot = snapshot
         showUndoToast = true
+
+        // Delete on the MAIN context — same context SwiftUI observes.
+        // This ensures SwiftUI processes the removal in the same run-loop
+        // tick and never tries to render a detached model object.
+        mainContext.delete(item)
+        try? mainContext.save()
+        clipboardItems.removeAll { $0.id == snapshot.id }
 
         // Auto-dismiss undo toast after 4 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
-            guard let self, self.lastDeletedItem?.id == item.id else { return }
+            guard let self, self.lastDeletedSnapshot?.id == snapshot.id else { return }
             withAnimation(Constants.Animation.smooth) {
                 self.showUndoToast = false
-                self.lastDeletedItem = nil
+                self.lastDeletedSnapshot = nil
             }
-        }
-
-        Task {
-            await storageService.delete(item.id)
-            refreshItems()
         }
     }
 
     func undoDelete() {
-        guard let item = lastDeletedItem else { return }
-        Task {
-            await storageService.save(item)
-            refreshItems()
-            await MainActor.run {
-                withAnimation(Constants.Animation.snappy) {
-                    showUndoToast = false
-                    lastDeletedItem = nil
-                }
-            }
+        guard let snapshot = lastDeletedSnapshot else { return }
+        let restored = snapshot.toClipboardItem()
+        mainContext.insert(restored)
+        try? mainContext.save()
+        refreshItems()
+        withAnimation(Constants.Animation.snappy) {
+            showUndoToast = false
+            lastDeletedSnapshot = nil
         }
     }
 
@@ -424,26 +424,6 @@ final class AppState: ObservableObject {
         showDiffView = false
     }
 
-    // MARK: - Merge
-
-    func toggleMergeSelection(_ item: ClipboardItem) {
-        if mergeSelection.contains(item.id) {
-            mergeSelection.remove(item.id)
-        } else {
-            mergeSelection.insert(item.id)
-        }
-    }
-
-    func clearMergeSelection() {
-        mergeSelection = []
-        isMergeMode = false
-        showMergeView = false
-    }
-
-    var mergeSelectedItems: [ClipboardItem] {
-        clipboardItems.filter { mergeSelection.contains($0.id) }
-    }
-
     // MARK: - Snippets
 
     func refreshSnippets() async {
@@ -468,7 +448,7 @@ final class AppState: ObservableObject {
     // MARK: - Hover Preview
 
     private var isAnyModalOpen: Bool {
-        detailItem != nil || showDiffView || showMergeView
+        detailItem != nil || showDiffView
         || showTransformResult || ocrResultItem != nil
         || showOnboarding || showSmartCollections
     }

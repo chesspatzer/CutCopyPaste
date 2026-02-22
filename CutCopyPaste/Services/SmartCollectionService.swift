@@ -28,11 +28,11 @@ final class SmartCollectionService {
             predicate: { $0.contentType == .image }
         ),
         SmartCollection(
-            id: "from_xcode",
-            name: "From Xcode",
-            systemImage: "hammer",
-            description: "Items copied from Xcode",
-            predicate: { $0.sourceAppBundleID == "com.apple.dt.Xcode" }
+            id: "files",
+            name: "Files & Paths",
+            systemImage: "folder",
+            description: "Copied files and file paths",
+            predicate: { $0.contentType == .file }
         ),
         SmartCollection(
             id: "from_browsers",

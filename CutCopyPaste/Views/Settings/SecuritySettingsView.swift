@@ -13,6 +13,7 @@ struct SecuritySettingsView: View {
                 Label("Sensitive Data Detection", systemImage: "exclamationmark.shield")
             } footer: {
                 Text("Detects API keys, passwords, credit card numbers, private keys, and other sensitive data. No data is sent anywhere.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Section {
@@ -21,6 +22,18 @@ struct SecuritySettingsView: View {
                 Label("Image Processing", systemImage: "doc.text.viewfinder")
             } footer: {
                 Text("Automatically runs OCR on captured images so their text is searchable. Uses Apple Vision — no data leaves your Mac.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if #available(macOS 26, *) {
+                Section {
+                    Toggle("Use on-device LLM for search", isOn: $preferences.useLLMSearch)
+                } header: {
+                    Label("AI Search", systemImage: "brain")
+                } footer: {
+                    Text("Uses Apple Intelligence to understand natural language search queries. Runs entirely on-device. When disabled or unavailable, falls back to keyword-based search.")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
 
             Section {

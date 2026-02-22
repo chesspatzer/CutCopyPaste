@@ -560,8 +560,6 @@ struct ClipboardItemRow: View {
             return Color.green.opacity(0.04)
         } else if isSelectedForCompare {
             return Color.blue.opacity(0.04)
-        } else if appState.mergeSelection.contains(item.id) {
-            return Color.purple.opacity(0.05)
         } else if isSelected {
             return Color.accentColor.opacity(0.06)
         } else {
@@ -572,8 +570,6 @@ struct ClipboardItemRow: View {
     private var cardBorder: Color {
         if isSelectedForCompare {
             return Color.blue.opacity(0.4)
-        } else if appState.mergeSelection.contains(item.id) {
-            return Color.purple.opacity(0.4)
         } else if isSelected {
             return Color.accentColor.opacity(0.4)
         } else {
@@ -582,7 +578,7 @@ struct ClipboardItemRow: View {
     }
 
     private var borderWidth: CGFloat {
-        (isSelectedForCompare || appState.mergeSelection.contains(item.id) || isSelected) ? 1.5 : 0.5
+        (isSelectedForCompare || isSelected) ? 1.5 : 0.5
     }
 
     // MARK: - Actions
@@ -632,13 +628,6 @@ struct ClipboardItemRow: View {
         Button { appState.toggleDiffSelection(item) } label: {
             Label(isSelectedForCompare ? "Deselect for Compare" : "Select for Compare",
                   systemImage: "arrow.left.arrow.right")
-        }
-
-        if appState.isMergeMode {
-            Button { appState.toggleMergeSelection(item) } label: {
-                Label(appState.mergeSelection.contains(item.id) ? "Deselect for Merge" : "Select for Merge",
-                      systemImage: "arrow.triangle.merge")
-            }
         }
 
         // Copy as... submenu

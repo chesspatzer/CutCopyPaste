@@ -20,6 +20,9 @@ A powerful macOS menubar clipboard manager built with SwiftUI and SwiftData. Run
 
 ### Smart Search
 - Full-text search across all content, OCR text, summaries, and metadata
+- **On-device LLM search** (macOS 26+) — uses Apple's Foundation Models framework with the on-device 3B parameter model for true natural language understanding of search queries
+- Conversational queries like "that error log from Xcode I copied today" are parsed by the LLM into structured filters (content type, date range, source app, text query)
+- **Automatic fallback** — on macOS 14–15 or when Apple Intelligence is unavailable, the app seamlessly falls back to heuristic regex-based intent parsing
 - **On-device semantic search** via Apple's NLEmbedding — finds "function" when you search "method", "error" when you search "exception"
 - Pre-computed embedding vectors at capture time for instant search (~8-16ms total)
 - **Natural language queries**: type "images from Xcode" or "links from yesterday" and the app understands
@@ -81,12 +84,6 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 - **Compare**: Hover any item and click the compare button to select it — a floating bar appears showing selection progress with a "Compare" button when ready
 - **Merge**: Click the merge button in the header to enter merge mode — selected items highlight purple, then merge with configurable separator
 - **Side-by-side diff** with paired removed/added lines, character-level inline highlighting, line numbers, and column headers showing source app and time
-
-### Paste Stack (Multi-Copy Mode)
-- Activate paste stack mode to queue up multiple copied items
-- **FIFO (Queue)** or **LIFO (Stack)** mode
-- Visual banner shows stack depth and current mode
-- Paste items in order — great for filling out forms or migrating data between apps
 
 ### Clipboard Rules
 - Create rules that automatically transform content on capture
@@ -260,7 +257,7 @@ ccp search "query"
 
 ## Building
 
-Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) and Xcode 15+.
+Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) and Xcode 26+ (for Foundation Models support; Xcode 15+ for basic build).
 
 ```bash
 # Generate the Xcode project
@@ -281,7 +278,7 @@ Or open `CutCopyPaste.xcodeproj` in Xcode and run the **CutCopyPaste** scheme.
 
 - **100% SwiftUI + SwiftData** — no UIKit, no Core Data
 - **No third-party dependencies** for the main app (CLI uses swift-argument-parser)
-- **No internet access** — everything runs locally using Apple frameworks (Vision for OCR, NaturalLanguage for NLP, Charts for analytics)
+- **No internet access** — everything runs locally using Apple frameworks (Foundation Models for LLM search, Vision for OCR, NaturalLanguage for NLP, Charts for analytics)
 - **Strict concurrency** — `@MainActor` isolated AppState, `@ModelActor` services
 
 ### Project Structure
@@ -297,7 +294,6 @@ CutCopyPaste/
 │   ├── Settings/           # Settings tabs
 │   ├── Snippets/           # Snippet management
 │   ├── Analytics/          # Dashboard and charts
-│   ├── PasteStack/         # Multi-copy UI
 │   ├── Onboarding/         # First-run welcome flow
 │   └── Components/         # Reusable buttons, badges, menus
 ├── Extensions/             # Transferable conformance, helpers

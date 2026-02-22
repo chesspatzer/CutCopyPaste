@@ -53,12 +53,12 @@ final class SmartCollectionTests: XCTestCase {
         XCTAssertFalse(collection.predicate(textItem))
     }
 
-    func testFromXcodeCollection() {
-        let collection = service.collections.first { $0.id == "from_xcode" }!
-        let xcodeItem = makeItem(sourceAppBundleID: "com.apple.dt.Xcode")
-        let safariItem = makeItem(sourceAppBundleID: "com.apple.Safari")
-        XCTAssertTrue(collection.predicate(xcodeItem))
-        XCTAssertFalse(collection.predicate(safariItem))
+    func testFilesCollection() {
+        let collection = service.collections.first { $0.id == "files" }!
+        let fileItem = makeItem(contentType: .file)
+        let textItem = makeItem(contentType: .text)
+        XCTAssertTrue(collection.predicate(fileItem))
+        XCTAssertFalse(collection.predicate(textItem))
     }
 
     func testFromBrowsersCollection() {

@@ -29,11 +29,6 @@ struct PopoverContentView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 6)
 
-                // Paste Stack Banner
-                if appState.pasteStackManager.isActive {
-                    PasteStackBannerView()
-                }
-
                 // Search (not shown on snippets tab)
                 if appState.selectedCategory != .snippets {
                     SearchBarView(text: $appState.searchText, searchMode: $appState.searchMode)
@@ -105,11 +100,6 @@ struct PopoverContentView: View {
                     compareBar
                 }
 
-                // Merge floating button
-                if appState.isMergeMode && !appState.mergeSelection.isEmpty {
-                    mergeBar
-                }
-
                 // Footer
                 footer
             }
@@ -137,24 +127,6 @@ struct PopoverContentView: View {
                     )
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
-            }
-
-            if appState.showMergeView {
-                overlayBackdrop {
-                    withAnimation(Constants.Animation.snappy) {
-                        appState.showMergeView = false
-                    }
-                }
-                MergeView(
-                    items: appState.mergeSelectedItems,
-                    onDismiss: {
-                        withAnimation(Constants.Animation.snappy) {
-                            appState.showMergeView = false
-                        }
-                    }
-                )
-                .environmentObject(appState)
-                .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
 
             if appState.showTransformResult, let result = appState.transformResult {
@@ -262,7 +234,6 @@ struct PopoverContentView: View {
         }
         .coordinateSpace(name: "popover")
         .animation(Constants.Animation.snappy, value: appState.showDiffView)
-        .animation(Constants.Animation.snappy, value: appState.showMergeView)
         .animation(Constants.Animation.snappy, value: appState.showTransformResult)
         .animation(Constants.Animation.snappy, value: appState.showOnboarding)
         .animation(Constants.Animation.snappy, value: appState.showUndoToast)
@@ -292,22 +263,6 @@ struct PopoverContentView: View {
                 .font(Constants.Typography.title)
                 .foregroundStyle(.primary)
                 .tracking(-0.3)
-
-            // Privacy badge
-            HStack(spacing: 3) {
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 7, weight: .bold))
-                Text("Offline")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
-            }
-            .foregroundStyle(.green.opacity(0.8))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background {
-                Capsule()
-                    .fill(.green.opacity(0.12))
-            }
-            .accessibilityLabel("Privacy: all data stays offline on your Mac")
 
             Spacer()
 
@@ -340,27 +295,6 @@ struct PopoverContentView: View {
 
                 // Overflow menu
                 Menu {
-                    Button {
-                        appState.pasteStackManager.isActive
-                        ? appState.pasteStackManager.deactivate()
-                        : appState.pasteStackManager.activate()
-                    } label: {
-                        Label(appState.pasteStackManager.isActive ? "Exit Paste Stack" : "Paste Stack Mode",
-                              systemImage: "square.stack.3d.up")
-                    }
-
-                    Button {
-                        appState.isMergeMode.toggle()
-                        if !appState.isMergeMode {
-                            appState.clearMergeSelection()
-                        }
-                    } label: {
-                        Label(appState.isMergeMode ? "Exit Merge Mode" : "Merge Clips",
-                              systemImage: "arrow.triangle.merge")
-                    }
-
-                    Divider()
-
                     Button {
                         NSApp.activate(ignoringOtherApps: true)
                         openWindow(id: "analytics")
@@ -423,31 +357,6 @@ struct PopoverContentView: View {
         .accessibilityLabel("Compare bar, \(appState.diffSelection.count) of 2 items selected")
     }
 
-    // MARK: - Merge Bar
-
-    private var mergeBar: some View {
-        HStack {
-            Text("\(appState.mergeSelection.count) selected")
-                .font(Constants.Typography.bar)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Button("Cancel") {
-                appState.clearMergeSelection()
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            Button("Merge") {
-                appState.showMergeView = true
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .disabled(appState.mergeSelection.count < 2)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(Color.purple.opacity(0.08))
-    }
-
     // MARK: - Undo Toast
 
     private var undoToast: some View {
@@ -497,19 +406,9 @@ struct PopoverContentView: View {
                 .font(Constants.Typography.footer)
                 .foregroundStyle(.tertiary)
 
-            if appState.pasteStackManager.isActive {
-                Text("\u{00B7} Stack: \(appState.pasteStackManager.depth)")
-                    .font(Constants.Typography.footer)
-                    .foregroundStyle(.purple.opacity(0.7))
-            }
-
             Spacer()
 
-            if appState.isMergeMode {
-                Text("Select items to merge")
-                    .font(Constants.Typography.footer)
-                    .foregroundStyle(.purple.opacity(0.7))
-            } else if appState.diffSelection.count == 1 {
+            if appState.diffSelection.count == 1 {
                 Text("Select one more to compare")
                     .font(Constants.Typography.footer)
                     .foregroundStyle(.blue.opacity(0.7))

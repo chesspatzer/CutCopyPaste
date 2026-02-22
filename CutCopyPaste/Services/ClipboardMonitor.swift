@@ -21,9 +21,6 @@ final class ClipboardMonitor: ObservableObject {
     /// Callback fired when a new item is captured, for UI refresh.
     var onNewItem: (() -> Void)?
 
-    /// Paste stack manager reference for multi-copy mode
-    var pasteStackManager: PasteStackManager?
-
     /// Rule engine for auto-transforms
     var ruleEngine: ClipboardRuleEngine?
 
@@ -145,15 +142,7 @@ final class ClipboardMonitor: ObservableObject {
 
             await storageService.save(item)
 
-            // Push to paste stack if active
             await MainActor.run {
-                if let pasteStackManager, pasteStackManager.isActive {
-                    pasteStackManager.push(
-                        textContent: item.textContent,
-                        contentType: item.contentType
-                    )
-                }
-
                 // Play capture sound
                 if UserPreferences.shared.playSoundOnCopy {
                     NSSound(named: .init("Tink"))?.play()

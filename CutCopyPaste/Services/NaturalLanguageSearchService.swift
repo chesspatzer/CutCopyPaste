@@ -144,6 +144,19 @@ final class NaturalLanguageSearchService {
         return intent
     }
 
+    // MARK: - Async Intent Parsing (LLM-enhanced on macOS 26+)
+
+    /// Parses search intent using the on-device LLM when available (macOS 26+),
+    /// falling back to heuristic regex-based parsing on older systems.
+    func parseIntentAsync(from query: String) async -> SearchIntent {
+        if #available(macOS 26, *), UserPreferences.shared.useLLMSearch {
+            if let llmIntent = await LLMSearchService.shared.parseIntent(from: query) {
+                return llmIntent
+            }
+        }
+        return parseIntent(from: query)
+    }
+
     // MARK: - Fuzzy Matching
 
     func fuzzyScore(query: String, against text: String) -> Double {

@@ -70,6 +70,7 @@ struct ShortcutsSettingsView: View {
                 Text("Works from any application to toggle CutCopyPaste.")
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Section {
