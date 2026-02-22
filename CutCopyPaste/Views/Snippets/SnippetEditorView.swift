@@ -115,7 +115,7 @@ struct SnippetEditorView: View {
                         Text("Built-in: {{date}}, {{time}}, {{clipboard}}, {{uuid}}, {{timestamp}}")
                             .font(.system(size: 9.5))
                     }
-                    .foregroundStyle(.quaternary)
+                    .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)

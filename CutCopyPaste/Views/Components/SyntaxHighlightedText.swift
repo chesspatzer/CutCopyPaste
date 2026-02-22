@@ -9,6 +9,13 @@ struct SyntaxHighlightedText: NSViewRepresentable {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    final class Coordinator {
+        var lastTextHash: Int = 0
+        var lastIsDark: Bool?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
         let textView = scrollView.documentView as! NSTextView
@@ -32,8 +39,15 @@ struct SyntaxHighlightedText: NSViewRepresentable {
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? NSTextView else { return }
         let isDark = colorScheme == .dark
+        let textHash = text.hashValue
+
+        // Skip update if nothing changed
+        guard textHash != context.coordinator.lastTextHash || isDark != context.coordinator.lastIsDark else { return }
+        context.coordinator.lastTextHash = textHash
+        context.coordinator.lastIsDark = isDark
+
+        guard let textView = scrollView.documentView as? NSTextView else { return }
         let attributed = SyntaxHighlighter.shared.highlight(text, language: language, isDark: isDark)
         textView.textStorage?.setAttributedString(attributed)
         textView.layoutManager?.ensureLayout(for: textView.textContainer!)

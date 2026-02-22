@@ -30,13 +30,13 @@ struct RulesSettingsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "wand.and.rays")
                         .font(.system(size: 32))
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                     Text("No rules configured")
                         .font(.subheadline)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                     Text("Rules automatically transform clipboard content based on the source app.")
                         .font(.caption)
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxHeight: .infinity)

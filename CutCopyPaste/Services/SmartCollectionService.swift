@@ -67,7 +67,7 @@ final class SmartCollectionService {
             systemImage: "calendar.badge.clock",
             description: "Items from this week",
             predicate: {
-                let start = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date()))!
+                guard let start = Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) else { return false }
                 return $0.createdAt >= start
             }
         ),

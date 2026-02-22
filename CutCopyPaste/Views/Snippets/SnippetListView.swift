@@ -6,6 +6,7 @@ struct SnippetListView: View {
     @State private var editingSnippet: Snippet?
     @State private var fillInSnippet: Snippet?
     @State private var searchText = ""
+    @AppStorage("hideBuiltInSnippets") private var hideBuiltInSnippets = false
 
     var body: some View {
         ZStack {
@@ -16,6 +17,21 @@ struct SnippetListView: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.tertiary)
                     Spacer()
+
+                    Button {
+                        withAnimation(Constants.Animation.snappy) {
+                            hideBuiltInSnippets.toggle()
+                        }
+                    } label: {
+                        Image(systemName: hideBuiltInSnippets ? "eye.slash" : "eye")
+                            .font(.system(size: 11))
+                            .foregroundStyle(hideBuiltInSnippets ? .secondary : Color.accentColor)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .help(hideBuiltInSnippets ? "Show built-in snippets" : "Hide built-in snippets")
+
                     Button {
                         editingSnippet = nil
                         withAnimation(Constants.Animation.snappy) {
@@ -37,7 +53,7 @@ struct SnippetListView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "text.badge.plus")
                             .font(.system(size: 24))
-                            .foregroundStyle(.quaternary)
+                            .foregroundStyle(.tertiary)
                         Text("No snippets yet")
                             .font(.system(size: 12))
                             .foregroundStyle(.tertiary)
@@ -125,13 +141,17 @@ struct SnippetListView: View {
     }
 
     private var filteredSnippets: [Snippet] {
-        if searchText.isEmpty {
-            return appState.snippets
+        var items = appState.snippets
+        if hideBuiltInSnippets {
+            items = items.filter { !$0.isBuiltIn }
         }
-        let query = searchText.lowercased()
-        return appState.snippets.filter {
-            $0.title.lowercased().contains(query) || $0.content.lowercased().contains(query)
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            items = items.filter {
+                $0.title.lowercased().contains(query) || $0.content.lowercased().contains(query)
+            }
         }
+        return items
     }
 }
 

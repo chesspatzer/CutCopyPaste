@@ -14,6 +14,7 @@ struct ClipboardListView: View {
     @State private var selectedIndex: Int? = nil
     @State private var appearedIDs: Set<UUID> = []
     @State private var appearCounter: Int = 0
+    @State private var initialLoadComplete: Bool = false
 
     private var selectedItemID: UUID? {
         guard let idx = selectedIndex, idx < items.count else { return nil }
@@ -51,6 +52,7 @@ struct ClipboardListView: View {
             .onChange(of: items.count) {
                 selectedIndex = nil
                 appearCounter = 0
+                initialLoadComplete = false
             }
         }
     }
@@ -77,13 +79,13 @@ struct ClipboardListView: View {
                 HStack(spacing: 6) {
                     Text(section.title)
                         .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                     Rectangle()
-                        .fill(Color.primary.opacity(0.06))
+                        .fill(Color.primary.opacity(0.10))
                         .frame(height: 0.5)
                     Text("\(section.items.count)")
                         .font(.system(size: 9, weight: .bold, design: .rounded))
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, displayMode == .compact ? 8 : 12)
                 .padding(.top, section.id == sections.first?.id ? 4 : 10)
@@ -102,6 +104,7 @@ struct ClipboardListView: View {
 
     @ViewBuilder
     private func itemRow(_ item: ClipboardItem) -> some View {
+        let alreadyAppeared = appearedIDs.contains(item.id) || initialLoadComplete
         ClipboardItemRow(
             item: item,
             displayMode: displayMode,
@@ -118,15 +121,22 @@ struct ClipboardListView: View {
             }
         )
         .id(item.id)
-        .opacity(appearedIDs.contains(item.id) ? 1 : 0)
-        .offset(y: appearedIDs.contains(item.id) ? 0 : 6)
+        .opacity(alreadyAppeared ? 1 : 0)
+        .offset(y: alreadyAppeared ? 0 : 6)
         .onAppear {
-            if !appearedIDs.contains(item.id) {
+            if !appearedIDs.contains(item.id) && !initialLoadComplete {
                 let order = appearCounter
                 appearCounter += 1
-                let delay = Double(min(order, 10)) * Constants.Animation.staggerDelay
-                withAnimation(Constants.Animation.smooth.delay(delay)) {
+                // Only animate the first visible batch (roughly 8 items)
+                if order < 8 {
+                    let delay = Double(order) * Constants.Animation.staggerDelay
+                    withAnimation(Constants.Animation.smooth.delay(delay)) {
+                        appearedIDs.insert(item.id)
+                    }
+                } else {
+                    // Skip animation for items beyond the initial batch
                     appearedIDs.insert(item.id)
+                    initialLoadComplete = true
                 }
             }
         }

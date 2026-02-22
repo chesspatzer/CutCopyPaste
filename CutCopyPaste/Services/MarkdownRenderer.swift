@@ -4,9 +4,40 @@ import Foundation
 final class MarkdownRenderer {
     static let shared = MarkdownRenderer()
 
+    /// Cache rendered output to avoid re-rendering the same text
+    private var renderCache = OrderedCache<RenderCacheKey, NSAttributedString>(capacity: 30)
+
+    private struct RenderCacheKey: Hashable {
+        let textHash: Int
+        let isDark: Bool
+        let fontSize: CGFloat
+    }
+
+    /// Cache compiled regex objects
+    private var regexCache: [String: NSRegularExpression] = [:]
+
+    private func cachedRegex(_ pattern: String) -> NSRegularExpression? {
+        if let cached = regexCache[pattern] { return cached }
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        regexCache[pattern] = regex
+        return regex
+    }
+
     // MARK: - Markdown Detection
 
+    /// Cache for isMarkdown results — avoids repeated regex checks for the same text
+    private static var isMarkdownCache: [Int: Bool] = [:]
+
     static func isMarkdown(_ text: String) -> Bool {
+        let hash = text.hashValue
+        if let cached = isMarkdownCache[hash] { return cached }
+        let result = _isMarkdown(text)
+        if isMarkdownCache.count > 200 { isMarkdownCache.removeAll() }
+        isMarkdownCache[hash] = result
+        return result
+    }
+
+    private static func _isMarkdown(_ text: String) -> Bool {
         let lines = text.components(separatedBy: .newlines)
         guard lines.count >= 2 else { return false }
 
@@ -49,6 +80,9 @@ final class MarkdownRenderer {
     // MARK: - Render to NSAttributedString
 
     func render(_ text: String, isDark: Bool, fontSize: CGFloat = 13) -> NSAttributedString {
+        let cacheKey = RenderCacheKey(textHash: text.hashValue, isDark: isDark, fontSize: fontSize)
+        if let cached = renderCache[cacheKey] { return cached }
+
         let result = NSMutableAttributedString()
         let lines = text.components(separatedBy: "\n")
 
@@ -168,9 +202,11 @@ final class MarkdownRenderer {
             // Ordered list: 1. item
             if let match = trimmed.range(of: "^(\\d+)\\. (.+)", options: .regularExpression) {
                 let fullMatch = String(trimmed[match])
-                let dotIdx = fullMatch.firstIndex(of: ".")!
+                guard let dotIdx = fullMatch.firstIndex(of: ".") else { continue }
                 let num = String(fullMatch[fullMatch.startIndex..<dotIdx])
-                let content = String(fullMatch[fullMatch.index(dotIdx, offsetBy: 2)...])
+                let afterDot = fullMatch.index(dotIdx, offsetBy: 2)
+                guard afterDot <= fullMatch.endIndex else { continue }
+                let content = String(fullMatch[afterDot...])
                 let numAttrs: [NSAttributedString.Key: Any] = [
                     .font: bodyFont,
                     .foregroundColor: bodyColor,
@@ -212,6 +248,7 @@ final class MarkdownRenderer {
             result.append(NSAttributedString(string: code + "\n", attributes: codeAttrs))
         }
 
+        renderCache[cacheKey] = result
         return result
     }
 
@@ -322,7 +359,7 @@ final class MarkdownRenderer {
         to attrString: NSMutableAttributedString,
         handler: (NSRange, String) -> Bool
     ) {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
+        guard let regex = cachedRegex(pattern) else { return }
         // Process matches from end to start so range replacements don't invalidate earlier ranges
         let fullString = attrString.string
         let matches = regex.matches(in: fullString, range: NSRange(fullString.startIndex..., in: fullString))

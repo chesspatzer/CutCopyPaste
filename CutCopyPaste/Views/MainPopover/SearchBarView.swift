@@ -22,9 +22,9 @@ struct SearchBarView: View {
     }
 
     private var borderColor: Color {
-        if isInvalidRegex { return Color.orange.opacity(0.5) }
-        if isFocused { return Color.accentColor.opacity(0.4) }
-        return Color.primary.opacity(isHovered ? 0.08 : 0.04)
+        if isInvalidRegex { return Color.orange.opacity(0.6) }
+        if isFocused { return Color.accentColor.opacity(0.5) }
+        return Color.primary.opacity(isHovered ? 0.14 : 0.08)
     }
 
     private var searchFont: Font {
@@ -102,7 +102,7 @@ struct SearchBarView: View {
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 13, design: .rounded))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
             .transition(.scale.combined(with: .opacity))

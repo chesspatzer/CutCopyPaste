@@ -7,6 +7,28 @@ final class SyntaxHighlighter {
     static let shared = SyntaxHighlighter()
     private init() {}
 
+    // MARK: - Caches
+
+    /// Cache compiled NSRegularExpression objects to avoid recompiling on every call
+    private var regexCache: [String: NSRegularExpression] = [:]
+
+    /// LRU cache for highlight output — keyed by (text hash, language, isDark)
+    private var highlightCache = OrderedCache<HighlightCacheKey, NSAttributedString>(capacity: 30)
+
+    private struct HighlightCacheKey: Hashable {
+        let textHash: Int
+        let language: String
+        let isDark: Bool
+    }
+
+    private func cachedRegex(_ pattern: String, options: NSRegularExpression.Options = []) -> NSRegularExpression? {
+        let key = "\(pattern)|\(options.rawValue)"
+        if let cached = regexCache[key] { return cached }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return nil }
+        regexCache[key] = regex
+        return regex
+    }
+
     // MARK: - Language Detection
 
     struct LanguagePattern {
@@ -136,7 +158,7 @@ final class SyntaxHighlighter {
 
             // Pattern matching
             for pattern in lang.patterns {
-                if let regex = try? NSRegularExpression(pattern: pattern, options: lang.name == "sql" ? .caseInsensitive : []) {
+                if let regex = cachedRegex(pattern, options: lang.name == "sql" ? .caseInsensitive : []) {
                     let matches = regex.numberOfMatches(in: sampleText, range: NSRange(sampleText.startIndex..., in: sampleText))
                     score += matches * 3
                 }
@@ -230,7 +252,7 @@ final class SyntaxHighlighter {
     }
 
     private func addMatches(pattern: String, type: TokenType, text: String, nsRange: NSRange, tokens: inout [Token], covered: inout IndexSet) {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return }
+        guard let regex = cachedRegex(pattern) else { return }
         let matches = regex.matches(in: text, range: nsRange)
         for match in matches {
             guard let range = Range(match.range, in: text) else { continue }
@@ -310,6 +332,9 @@ final class SyntaxHighlighter {
 
     /// Build an NSAttributedString with syntax highlighting colors.
     func highlight(_ text: String, language: String, isDark: Bool) -> NSAttributedString {
+        let cacheKey = HighlightCacheKey(textHash: text.hashValue, language: language, isDark: isDark)
+        if let cached = highlightCache[cacheKey] { return cached }
+
         let tokens = tokenize(text, language: language)
         let attributed = NSMutableAttributedString(string: text)
         let fullRange = NSRange(location: 0, length: attributed.length)
@@ -330,6 +355,7 @@ final class SyntaxHighlighter {
             }
         }
 
+        highlightCache[cacheKey] = attributed
         return attributed
     }
 

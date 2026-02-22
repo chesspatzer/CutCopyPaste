@@ -29,14 +29,22 @@ final class ShareService {
             do {
                 switch item.contentType {
                 case .text, .richText, .link:
-                    try item.textContent?.write(to: url, atomically: true, encoding: .utf8)
+                    guard let text = item.textContent else { return }
+                    try text.write(to: url, atomically: true, encoding: .utf8)
                 case .image:
-                    try item.imageData?.write(to: url)
+                    guard let data = item.imageData else { return }
+                    try data.write(to: url)
                 case .file:
                     break
                 }
             } catch {
-                // Silently fail — user can retry
+                DispatchQueue.main.async {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = error.localizedDescription
+                    alert.alertStyle = .warning
+                    alert.runModal()
+                }
             }
         }
     }

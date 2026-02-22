@@ -18,8 +18,8 @@ enum Constants {
         static let cornerRadius: CGFloat = 12
         static let rowPaddingCompact: CGFloat = 10
         static let rowPaddingComfortable: CGFloat = 12
-        static let cardShadowRadius: CGFloat = 2
-        static let cardShadowOpacity: Double = 0.06
+        static let cardShadowRadius: CGFloat = 3
+        static let cardShadowOpacity: Double = 0.10
         static let cardSpacing: CGFloat = 6
     }
 

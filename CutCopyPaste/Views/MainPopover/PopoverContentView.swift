@@ -268,7 +268,7 @@ struct PopoverContentView: View {
         HStack(alignment: .center) {
             Text("CutCopyPaste")
                 .font(Constants.Typography.title)
-                .foregroundStyle(.primary.opacity(0.8))
+                .foregroundStyle(.primary)
                 .tracking(-0.3)
 
             // Privacy badge
@@ -278,12 +278,12 @@ struct PopoverContentView: View {
                 Text("Offline")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
             }
-            .foregroundStyle(.green.opacity(0.6))
+            .foregroundStyle(.green.opacity(0.8))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background {
                 Capsule()
-                    .fill(.green.opacity(0.08))
+                    .fill(.green.opacity(0.12))
             }
             .accessibilityLabel("Privacy: all data stays offline on your Mac")
 
@@ -309,7 +309,7 @@ struct PopoverContentView: View {
                 SettingsLink {
                     Image(systemName: "gear")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Circle())
                 }
@@ -356,7 +356,7 @@ struct PopoverContentView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Circle())
                 }
@@ -396,7 +396,7 @@ struct PopoverContentView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .background(Color.blue.opacity(0.05))
+        .background(Color.blue.opacity(0.08))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Compare bar, \(appState.diffSelection.count) of 2 items selected")
     }
@@ -423,7 +423,7 @@ struct PopoverContentView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .background(Color.purple.opacity(0.05))
+        .background(Color.purple.opacity(0.08))
     }
 
     // MARK: - Undo Toast
@@ -473,12 +473,12 @@ struct PopoverContentView: View {
             let count = appState.clipboardItems.count
             Text("\(count) \(count == 1 ? "clip" : "clips")")
                 .font(Constants.Typography.footer)
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(.tertiary)
 
             if appState.pasteStackManager.isActive {
                 Text("\u{00B7} Stack: \(appState.pasteStackManager.depth)")
                     .font(Constants.Typography.footer)
-                    .foregroundStyle(.purple.opacity(0.5))
+                    .foregroundStyle(.purple.opacity(0.7))
             }
 
             Spacer()
@@ -486,11 +486,11 @@ struct PopoverContentView: View {
             if appState.isMergeMode {
                 Text("Select items to merge")
                     .font(Constants.Typography.footer)
-                    .foregroundStyle(.purple.opacity(0.5))
+                    .foregroundStyle(.purple.opacity(0.7))
             } else if appState.diffSelection.count == 1 {
                 Text("Select one more to compare")
                     .font(Constants.Typography.footer)
-                    .foregroundStyle(.blue.opacity(0.5))
+                    .foregroundStyle(.blue.opacity(0.7))
             }
         }
         .padding(.horizontal, 14)

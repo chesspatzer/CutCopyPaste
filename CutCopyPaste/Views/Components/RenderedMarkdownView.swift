@@ -8,6 +8,13 @@ struct RenderedMarkdownView: NSViewRepresentable {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    final class Coordinator {
+        var lastTextHash: Int = 0
+        var lastIsDark: Bool?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     init(text: String, maxHeight: CGFloat = 200, fontSize: CGFloat = 13) {
         self.text = text
         self.maxHeight = maxHeight
@@ -38,11 +45,17 @@ struct RenderedMarkdownView: NSViewRepresentable {
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? NSTextView else { return }
         let isDark = colorScheme == .dark
+        let textHash = text.hashValue
+
+        // Skip update if nothing changed
+        guard textHash != context.coordinator.lastTextHash || isDark != context.coordinator.lastIsDark else { return }
+        context.coordinator.lastTextHash = textHash
+        context.coordinator.lastIsDark = isDark
+
+        guard let textView = scrollView.documentView as? NSTextView else { return }
         let attributed = MarkdownRenderer.shared.render(text, isDark: isDark, fontSize: fontSize)
         textView.textStorage?.setAttributedString(attributed)
-        // Force layout so the text view reports correct size
         textView.layoutManager?.ensureLayout(for: textView.textContainer!)
     }
 }

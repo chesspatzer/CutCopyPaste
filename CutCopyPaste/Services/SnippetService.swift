@@ -122,12 +122,173 @@ actor SnippetService {
         guard existing.filter({ $0.isBuiltIn }).isEmpty else { return }
 
         let builtIns: [(String, String)] = [
-            ("Date Stamp", "{{date}} {{time}}"),
-            ("Code Comment Block", "// MARK: - {{section}}\n// TODO: {{description}}"),
-            ("Bug Report", "## Bug Report\n**Steps to reproduce:**\n1. {{steps}}\n**Expected:** {{expected}}\n**Actual:** {{actual}}"),
-            ("Email Reply", "Hi {{name}},\n\nThank you for your email regarding {{topic}}.\n\n{{clipboard}}\n\nBest regards"),
-            ("Console Log", "print(\"DEBUG [\\(#function)] {{variable}} = \\({{variable}})\")"),
-            ("Guard Statement", "guard let {{variable}} = {{variable}} else {\n    return\n}"),
+            // -- Everyday --
+            ("Date & Time Stamp", "{{date}} at {{time}}"),
+
+            ("Meeting Notes", """
+            # Meeting Notes — {{date}}
+
+            **Attendees:** {{attendees}}
+            **Topic:** {{topic}}
+
+            ## Discussion
+            - {{notes}}
+
+            ## Action Items
+            - [ ] {{action}}
+
+            ## Next Steps
+            {{next}}
+            """),
+
+            ("Bug Report", """
+            ## Bug Report
+
+            **Title:** {{title}}
+            **Severity:** {{severity}}
+            **Environment:** {{environment}}
+
+            ### Steps to Reproduce
+            1. {{step1}}
+            2. {{step2}}
+            3. {{step3}}
+
+            ### Expected Behavior
+            {{expected}}
+
+            ### Actual Behavior
+            {{actual}}
+
+            ### Screenshots / Logs
+            {{details}}
+            """),
+
+            ("PR Description", """
+            ## Summary
+            {{summary}}
+
+            ## Changes
+            - {{change1}}
+            - {{change2}}
+
+            ## Test Plan
+            - [ ] {{test1}}
+            - [ ] {{test2}}
+
+            ## Screenshots
+            {{screenshots}}
+            """),
+
+            ("Email Reply", """
+            Hi {{name}},
+
+            Thanks for reaching out about {{topic}}.
+
+            {{response}}
+
+            Let me know if you have any questions.
+
+            Best,
+            {{sender}}
+            """),
+
+            // -- Code --
+            ("TODO Comment", "// TODO({{author}}): {{description}} [{{date}}]"),
+
+            ("Function Skeleton", """
+            /// {{description}}
+            /// - Parameter {{param}}: {{paramDesc}}
+            /// - Returns: {{returnDesc}}
+            func {{name}}({{param}}: {{paramType}}) -> {{returnType}} {
+                {{body}}
+            }
+            """),
+
+            ("API Request (fetch)", """
+            const response = await fetch('{{url}}', {
+              method: '{{method}}',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer {{token}}'
+              },
+              body: JSON.stringify({{body}})
+            });
+            const data = await response.json();
+            """),
+
+            ("Python Script Header", """
+            #!/usr/bin/env python3
+            \"\"\"{{description}}\"\"\"
+
+            import argparse
+            import logging
+
+            logger = logging.getLogger(__name__)
+
+
+            def main():
+                parser = argparse.ArgumentParser(description="{{description}}")
+                parser.add_argument("{{arg}}", help="{{argHelp}}")
+                args = parser.parse_args()
+
+                {{body}}
+
+
+            if __name__ == "__main__":
+                logging.basicConfig(level=logging.INFO)
+                main()
+            """),
+
+            ("SQL Query Template", """
+            SELECT
+                {{columns}}
+            FROM {{table}}
+            WHERE {{condition}}
+            ORDER BY {{orderBy}}
+            LIMIT {{limit}};
+            """),
+
+            ("Shell Script Header", """
+            #!/usr/bin/env bash
+            set -euo pipefail
+
+            # {{description}}
+            # Usage: ./{{scriptName}} {{args}}
+
+            {{body}}
+            """),
+
+            ("Regex Pattern", "/{{pattern}}/{{flags}} — {{description}}"),
+
+            // -- Responses --
+            ("Code Review Comment", """
+            **{{severity}}**: {{issue}}
+
+            {{suggestion}}
+
+            ```{{language}}
+            {{code}}
+            ```
+            """),
+
+            ("Standup Update", """
+            **Yesterday:** {{yesterday}}
+            **Today:** {{today}}
+            **Blockers:** {{blockers}}
+            """),
+
+            ("Changelog Entry", """
+            ## [{{version}}] — {{date}}
+
+            ### Added
+            - {{added}}
+
+            ### Changed
+            - {{changed}}
+
+            ### Fixed
+            - {{fixed}}
+            """),
         ]
 
         for (index, (title, content)) in builtIns.enumerated() {
@@ -136,6 +297,16 @@ actor SnippetService {
         }
         try? modelContext.save()
         logger.info("Seeded \(builtIns.count) built-in snippets")
+    }
+
+    /// Replace old built-in snippets with the improved set.
+    func replaceBuiltInSnippets() {
+        let existing = fetchSnippets()
+        for snippet in existing where snippet.isBuiltIn {
+            modelContext.delete(snippet)
+        }
+        try? modelContext.save()
+        seedBuiltInSnippets()
     }
 
     // MARK: - Helpers

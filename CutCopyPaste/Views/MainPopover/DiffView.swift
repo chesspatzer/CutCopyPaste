@@ -190,7 +190,7 @@ struct DiffView: View {
                 Text(line.lineNumber.map { "\($0)" } ?? "")
                     .frame(width: 28, alignment: .trailing)
                     .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(.quaternary)
+                    .foregroundStyle(.tertiary)
 
                 // Indicator
                 Text(indicator(line.type))
@@ -278,7 +278,7 @@ struct DiffView: View {
             Spacer()
             Text(time)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 10)
         .frame(maxWidth: .infinity)

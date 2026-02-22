@@ -139,6 +139,7 @@ final class UserPreferences: ObservableObject {
     // MARK: - Snippets
 
     @AppStorage("snippetsSeeded") var snippetsSeeded: Bool = false
+    @AppStorage("snippetsSeededV2") var snippetsSeededV2: Bool = false
 
     // MARK: - Paste Stack
 

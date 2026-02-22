@@ -74,7 +74,7 @@ Items with detected sensitive data show a warning badge. Enable **auto-mask** to
 - Built-in variables: `{{date}}`, `{{time}}`, `{{clipboard}}`, `{{uuid}}`, `{{timestamp}}`
 - Custom variables prompt a fill-in dialog before insertion
 - Organize snippets into folders
-- Ships with built-in templates: date stamp, code comment block, bug report, email reply, console log, guard statement
+- Ships with 15 built-in templates: meeting notes, bug report, PR description, email reply, standup update, changelog entry, function skeleton, API request (fetch), Python script header, SQL query, shell script, TODO comment, code review comment, regex pattern, date stamp
 - Usage tracking (most-used snippets rise to the top)
 
 ### Diff & Merge
@@ -218,7 +218,8 @@ Clean, card-based design:
 - Staggered card entry animations
 - **Haptic feedback** on copy, pin, and delete actions
 - **Full VoiceOver support** — accessibility labels on all interactive elements
-- **Performance optimized** — static caches for app icons and hex colors, lazy image loading, pre-computed URL parsing, snappy animations (~150ms)
+- **High-contrast readability** — carefully tuned opacity levels and foreground styles for clear visibility in both light and dark modes
+- **Performance optimized** — LRU caches for syntax highlighting and markdown rendering, static caches for app icons and hex colors, lazy image loading, JPEG thumbnails for lower memory, stagger animations limited to visible items, batched database operations, coordinator-based NSView update skipping
 
 ---
 
@@ -300,7 +301,7 @@ CutCopyPaste/
 │   ├── Onboarding/         # First-run welcome flow
 │   └── Components/         # Reusable buttons, badges, menus
 ├── Extensions/             # Transferable conformance, helpers
-└── Utilities/              # Constants, keyboard shortcuts
+└── Utilities/              # Constants, keyboard shortcuts, LRU cache
 
 CutCopyPasteCLI/            # CLI tool (list, copy, paste, search)
 ```

@@ -52,7 +52,7 @@ struct AboutSettingsView: View {
 
             Text("Made with care for developers and power users.")
                 .font(.system(size: 10, weight: .medium, design: .rounded))
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(.tertiary)
                 .padding(.bottom, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

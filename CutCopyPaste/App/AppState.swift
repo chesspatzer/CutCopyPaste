@@ -112,6 +112,11 @@ final class AppState: ObservableObject {
                 await snippetService.seedBuiltInSnippets()
                 await ruleEngine.seedDefaultRules()
                 preferences.snippetsSeeded = true
+                preferences.snippetsSeededV2 = true
+            } else if !preferences.snippetsSeededV2 {
+                // Re-seed with improved built-in snippets for existing users
+                await snippetService.replaceBuiltInSnippets()
+                preferences.snippetsSeededV2 = true
             }
             await refreshSnippets()
             await storageService.backfillEmbeddings()

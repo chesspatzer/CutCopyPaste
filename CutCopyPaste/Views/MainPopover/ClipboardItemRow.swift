@@ -46,7 +46,7 @@ struct ClipboardItemRow: View {
             if isHovered {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.quaternary)
+                    .foregroundStyle(.tertiary)
                     .frame(width: 12)
                     .transition(.opacity)
             }
@@ -66,7 +66,7 @@ struct ClipboardItemRow: View {
             if !isCompact, let summary = item.summary, !item.isMasked {
                 Text(summary)
                     .font(Constants.Typography.summary)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary.opacity(0.8))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .italic()
@@ -179,23 +179,23 @@ struct ClipboardItemRow: View {
             if let lang = item.detectedLanguage {
                 Text(SyntaxHighlighter.displayName(for: lang))
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.blue.opacity(0.7))
+                    .foregroundStyle(.blue.opacity(0.9))
                     .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Capsule().fill(Color.blue.opacity(0.08)))
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.blue.opacity(0.14)))
             } else if effectiveIsMarkdown {
                 Text("Markdown")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.purple.opacity(0.7))
+                    .foregroundStyle(.purple.opacity(0.9))
                     .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Capsule().fill(Color.purple.opacity(0.08)))
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.purple.opacity(0.14)))
             }
 
             if showTimestamps {
                 Text(item.createdAt.relativeFormatted())
                     .font(Constants.Typography.footnote)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
             }
 
             // Pin indicator
@@ -248,20 +248,20 @@ struct ClipboardItemRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+                        .strokeBorder(Color.primary.opacity(0.10), lineWidth: 0.5)
                 }
         } else {
             HStack {
                 Spacer()
                 Image(systemName: "photo")
                     .font(.system(size: 24, weight: .light))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             .frame(height: 60)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.primary.opacity(0.03))
+                    .fill(Color.primary.opacity(0.04))
             }
             .onAppear { loadImageIfNeeded() }
         }
@@ -299,15 +299,15 @@ struct ClipboardItemRow: View {
             HStack(spacing: 6) {
                 Image(systemName: "link")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.blue.opacity(0.6))
+                    .foregroundStyle(.blue.opacity(0.8))
                 Text(link.domain)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(.primary.opacity(0.85))
+                    .foregroundStyle(.primary.opacity(0.9))
                     .lineLimit(1)
                 if !link.displayPath.isEmpty {
                     Text(link.displayPath)
                         .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -316,7 +316,7 @@ struct ClipboardItemRow: View {
             .padding(6)
             .background {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.blue.opacity(0.03))
+                    .fill(Color.blue.opacity(0.06))
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
@@ -334,13 +334,13 @@ struct ClipboardItemRow: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(link.domain)
                             .font(Constants.Typography.linkDomain)
-                            .foregroundStyle(.primary.opacity(0.85))
+                            .foregroundStyle(.primary.opacity(0.9))
                             .lineLimit(1)
 
                         if !link.displayPath.isEmpty {
                             Text(link.displayPath)
                                 .font(Constants.Typography.linkDetail)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         }
@@ -350,23 +350,23 @@ struct ClipboardItemRow: View {
 
                     Image(systemName: "arrow.up.right")
                         .font(Constants.Typography.footnote)
-                        .foregroundStyle(.blue.opacity(0.5))
+                        .foregroundStyle(.blue.opacity(0.7))
                 }
 
                 // Full URL
                 Text(link.urlString)
                     .font(Constants.Typography.linkDetail)
-                    .foregroundStyle(.blue.opacity(0.7))
+                    .foregroundStyle(.blue.opacity(0.8))
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
             .padding(10)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.blue.opacity(0.03))
+                    .fill(Color.blue.opacity(0.06))
                     .overlay {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(Color.blue.opacity(0.08), lineWidth: 0.5)
+                            .strokeBorder(Color.blue.opacity(0.15), lineWidth: 0.5)
                     }
             }
         }
@@ -383,7 +383,7 @@ struct ClipboardItemRow: View {
             if let first = item.filePaths?.first {
                 Text(first.components(separatedBy: "/").last ?? first)
                     .font(Constants.Typography.linkDetail)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
@@ -444,24 +444,24 @@ struct ClipboardItemRow: View {
                     Text(item.contentType.displayName)
                         .font(Constants.Typography.footnote)
                 }
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(.tertiary)
 
                 if let count = item.characterCount, item.contentType != .image {
                     Text("\u{00B7}")
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                         .font(Constants.Typography.footnote)
                     Text("\(count) chars")
                         .font(Constants.Typography.footnote)
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                 }
 
                 if item.ocrText != nil {
                     Text("\u{00B7}")
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                         .font(Constants.Typography.footnote)
                     Text("OCR")
                         .font(Constants.Typography.footnote)
-                        .foregroundStyle(.quaternary)
+                        .foregroundStyle(.tertiary)
                 }
             }
 
@@ -521,13 +521,13 @@ struct ClipboardItemRow: View {
 
     private var cardBorder: Color {
         if isSelectedForCompare {
-            return Color.blue.opacity(0.3)
+            return Color.blue.opacity(0.4)
         } else if appState.mergeSelection.contains(item.id) {
-            return Color.purple.opacity(0.3)
+            return Color.purple.opacity(0.4)
         } else if isSelected {
-            return Color.accentColor.opacity(0.3)
+            return Color.accentColor.opacity(0.4)
         } else {
-            return Color.primary.opacity(isHovered ? 0.08 : 0.04)
+            return Color.primary.opacity(isHovered ? 0.14 : 0.08)
         }
     }
 

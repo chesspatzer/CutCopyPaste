@@ -31,6 +31,6 @@ extension NSImage {
 
         guard let tiff = newImage.tiffRepresentation,
               let rep = NSBitmapImageRep(data: tiff) else { return nil }
-        return rep.representation(using: .png, properties: [:])
+        return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
     }
 }

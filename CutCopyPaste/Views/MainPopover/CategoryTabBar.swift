@@ -63,10 +63,10 @@ struct CategoryTabBar: View {
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .foregroundStyle(isSelected ? .white : .secondary)
+                        .foregroundStyle(isSelected ? .white : .primary.opacity(0.6))
                         .background {
                             Capsule()
-                                .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.05))
+                                .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.07))
                         }
                     }
                     .buttonStyle(.plain)

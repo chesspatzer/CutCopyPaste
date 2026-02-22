@@ -223,16 +223,22 @@ actor StorageService {
     // MARK: - Embedding Backfill
 
     /// Populate embedding vectors for existing items that don't have one.
-    /// Called once on app launch for migration.
+    /// Called once on app launch for migration. Processes in batches to limit memory.
     func backfillEmbeddings() {
-        let descriptor = FetchDescriptor<ClipboardItem>()
-        guard let items = try? modelContext.fetch(descriptor) else { return }
-
         let semanticService = SemanticSearchService.shared
         guard semanticService.isAvailable else { return }
 
+        var descriptor = FetchDescriptor<ClipboardItem>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 50
+
+        guard let items = try? modelContext.fetch(descriptor) else { return }
+        let needsBackfill = items.filter { $0.embeddingVector == nil }
+        guard !needsBackfill.isEmpty else { return }
+
         var updated = 0
-        for item in items where item.embeddingVector == nil {
+        for item in needsBackfill {
             guard let text = item.textContent ?? item.ocrText else { continue }
             if let vector = semanticService.computeEmbedding(for: text) {
                 item.embeddingVector = SemanticSearchService.vectorToData(vector)

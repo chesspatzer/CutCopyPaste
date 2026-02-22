@@ -56,7 +56,8 @@ actor AnalyticsService {
         let today = calendar.startOfDay(for: Date())
         while current <= today {
             result.append(DailyCount(date: current, count: dayMap[current] ?? 0))
-            current = calendar.date(byAdding: .day, value: 1, to: current)!
+            guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+            current = next
         }
 
         return result
