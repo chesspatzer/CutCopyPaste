@@ -6,6 +6,17 @@ struct AppearanceSettingsView: View {
     var body: some View {
         Form {
             Section {
+                Picker("Appearance", selection: $prefs.appearanceMode) {
+                    ForEach(AppearanceMode.allCases) { mode in
+                        Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("Theme")
+            }
+
+            Section {
                 Picker("Display density", selection: $prefs.displayMode) {
                     ForEach(DisplayMode.allCases) { mode in
                         Text(mode.displayName).tag(mode)

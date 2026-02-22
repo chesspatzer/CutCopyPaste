@@ -149,7 +149,7 @@ Clean, card-based design:
 | Tab | Options |
 |---|---|
 | **General** | Max history, retention days, deduplication, launch at login, sound on copy |
-| **Appearance** | Compact/comfortable mode, popover dimensions, show timestamps, show source app |
+| **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app |
 | **Security** | Detect sensitive data, auto-mask |
 | **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), modifier key selection |
 | **Exclusions** | Apps to never capture from (1Password, Bitwarden, LastPass, Keychain Access by default) |
