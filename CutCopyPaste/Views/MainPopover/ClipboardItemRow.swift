@@ -26,97 +26,47 @@ struct ClipboardItemRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            // Type badge with sensitive data indicator
-            ZStack(alignment: .topTrailing) {
-                TypeBadge(type: item.contentType)
-                SensitiveDataBadge(types: item.sensitiveDataTypes)
-                    .offset(x: 4, y: -4)
+        VStack(alignment: .leading, spacing: 0) {
+            // Top bar: source app + time + pin
+            topBar
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
+
+            // Content preview
+            contentPreview
+                .padding(.horizontal, 12)
+
+            // Summary for long text
+            if let summary = item.summary, !item.isMasked {
+                Text(summary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .italic()
+                    .padding(.horizontal, 12)
+                    .padding(.top, 4)
             }
 
-            // Content area — takes all available space
-            VStack(alignment: .leading, spacing: 3) {
-                contentPreview
-
-                // Summary for long text
-                if let summary = item.summary, !item.isMasked {
-                    Text(summary)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .italic()
-                }
-
-                // Metadata row — wraps naturally, limited to 1 line
-                metadataRow
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // Right side: always-visible copy + contextual actions on hover
-            HStack(spacing: 2) {
-                if isHovered {
-                    // Compare button on hover
-                    Button {
-                        appState.toggleDiffSelection(item)
-                    } label: {
-                        Image(systemName: isSelectedForCompare ? "arrow.left.arrow.right.circle.fill" : "arrow.left.arrow.right")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(isSelectedForCompare ? .blue : .secondary)
-                            .frame(width: 26, height: 26)
-                            .background {
-                                Circle()
-                                    .fill(isSelectedForCompare ? Color.blue.opacity(0.1) : Color.primary.opacity(0.06))
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .help(isSelectedForCompare ? "Deselect for Compare" : "Compare")
-
-                    // Transform actions
-                    if item.textContent != nil || item.contentType == .image {
-                        ActionsMenu(item: item)
-                    }
-
-                    PinButton(isPinned: item.isPinned, action: onPin)
-
-                    DeleteButton(action: onDelete)
-                }
-
-                // Copy button always visible
-                CopyButton(action: {
-                    onCopy()
-                    withAnimation(Constants.Animation.bouncy) {
-                        justCopied = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                        withAnimation(Constants.Animation.smooth) {
-                            justCopied = false
-                        }
-                    }
-                })
-                .opacity(isHovered ? 1.0 : 0.4)
-
-                if !isHovered && item.isPinned {
-                    Image(systemName: "pin.fill")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.orange.opacity(0.5))
-                }
-            }
-            .transition(.opacity)
+            // Bottom bar: type label + char count + hover actions
+            bottomBar
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .padding(.bottom, 10)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, displayMode == .compact
-                 ? Constants.UI.rowPaddingCompact
-                 : Constants.UI.rowPaddingComfortable)
         .background {
             RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous)
-                .fill(backgroundColor)
-                .overlay {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous)
-                            .strokeBorder(Color.accentColor.opacity(0.3), lineWidth: 1.5)
-                    }
-                }
+                .fill(cardBackground)
+                .shadow(
+                    color: .black.opacity(isHovered ? 0.1 : Constants.UI.cardShadowOpacity),
+                    radius: isHovered ? 4 : Constants.UI.cardShadowRadius,
+                    y: 1
+                )
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous)
+                .strokeBorder(cardBorder, lineWidth: borderWidth)
         }
         .overlay {
             if justCopied {
@@ -134,78 +84,58 @@ struct ClipboardItemRow: View {
         }
         .animation(Constants.Animation.quick, value: isHovered)
         .onTapGesture(count: 2) {
-            onCopy()
+            performCopy()
         }
         .draggable(TransferableClipboardData(from: item)) {
             HStack(spacing: 6) {
-                TypeBadge(type: item.contentType)
+                Image(systemName: item.contentType.systemImage)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
                 Text(item.preview)
                     .font(.system(size: 11))
                     .lineLimit(1)
                     .frame(maxWidth: 200)
             }
-            .padding(6)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
+            .padding(8)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
         }
         .contextMenu {
             contextMenuItems
         }
     }
 
-    // MARK: - Metadata Row
+    // MARK: - Top Bar
 
-    @ViewBuilder
-    private var metadataRow: some View {
-        let pills = metadataPills
-        if !pills.isEmpty {
-            HStack(spacing: 3) {
-                ForEach(pills.prefix(3), id: \.self) { pill in
-                    MetadataPill(text: pill)
-                }
-                if pills.count > 3 {
-                    MetadataPill(text: "+\(pills.count - 3)")
-                }
+    private var topBar: some View {
+        HStack(spacing: 6) {
+            // Source app icon
+            if let bundleID = item.sourceAppBundleID {
+                SourceAppIcon(bundleID: bundleID)
             }
-        }
-    }
 
-    private var metadataPills: [String] {
-        var pills: [String] = []
-        if showTimestamps {
-            pills.append(item.createdAt.relativeFormatted())
-        }
-        if showSourceApp, let app = item.sourceAppName {
-            pills.append(app)
-        }
-        // Only show workspace if it's different from the source app name
-        if let workspace = item.workspaceName,
-           workspace != item.sourceAppName {
-            pills.append(workspace)
-        }
-        if let count = item.characterCount, item.contentType != .image {
-            pills.append("\(count) chars")
-        }
-        if item.ocrText != nil {
-            pills.append("OCR")
-        }
-        return pills
-    }
+            if showSourceApp, let app = item.sourceAppName {
+                Text(app)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
 
-    // MARK: - Background
+            Spacer()
 
-    private var backgroundColor: Color {
-        if justCopied {
-            return Color.green.opacity(0.05)
-        } else if isSelectedForCompare {
-            return Color.blue.opacity(0.06)
-        } else if appState.mergeSelection.contains(item.id) {
-            return Color.purple.opacity(0.08)
-        } else if isSelected {
-            return Color.accentColor.opacity(0.08)
-        } else if isHovered {
-            return Color.primary.opacity(0.04)
-        } else {
-            return Color.clear
+            if showTimestamps {
+                Text(item.createdAt.relativeFormatted())
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+
+            // Pin indicator
+            if item.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.orange)
+            }
+
+            // Sensitive data badge
+            SensitiveDataBadge(types: item.sensitiveDataTypes)
         }
     }
 
@@ -215,33 +145,31 @@ struct ClipboardItemRow: View {
     private var contentPreview: some View {
         switch item.contentType {
         case .image:
-            HStack(spacing: 6) {
-                if let thumbData = item.thumbnailData, let nsImage = NSImage(data: thumbData) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: 180, maxHeight: displayMode == .compact ? 30 : 40)
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
-                        }
-                } else {
-                    Label("Image", systemImage: "photo")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
+            if let thumbData = item.thumbnailData, let nsImage = NSImage(data: thumbData) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity, maxHeight: displayMode == .compact ? 48 : 72)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+                    }
+            } else {
+                Label("Image", systemImage: "photo")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
             }
 
         case .file:
             let count = item.filePaths?.count ?? 0
-            HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("\(count) file\(count == 1 ? "" : "s")")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.primary)
                 if let first = item.filePaths?.first {
                     Text(first.components(separatedBy: "/").last ?? first)
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                         .truncationMode(.middle)
@@ -250,9 +178,9 @@ struct ClipboardItemRow: View {
 
         case .link:
             Text(item.isMasked ? displayText : (item.textContent?.firstLine ?? "Link"))
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundColor(item.isMasked ? .secondary : .blue)
-                .lineLimit(displayMode == .compact ? 1 : 2)
+                .lineLimit(displayMode == .compact ? 2 : 3)
                 .truncationMode(.tail)
 
         case .text, .richText:
@@ -261,18 +189,133 @@ struct ClipboardItemRow: View {
                     if let color = parseHexColor(text.trimmingCharacters(in: .whitespacesAndNewlines)) {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(color)
-                            .frame(width: 14, height: 14)
+                            .frame(width: 16, height: 16)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.primary.opacity(0.2), lineWidth: 0.5)
+                                    .strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
                             }
                     }
                 }
                 Text(displayText)
-                    .font(.system(size: 12))
-                    .lineLimit(displayMode == .compact ? 1 : 2)
+                    .font(.system(size: 13))
+                    .lineLimit(displayMode == .compact ? 2 : 3)
                     .truncationMode(.tail)
-                    .foregroundStyle(.primary.opacity(0.85))
+                    .foregroundStyle(.primary.opacity(0.9))
+            }
+        }
+    }
+
+    // MARK: - Bottom Bar
+
+    private var bottomBar: some View {
+        HStack(spacing: 6) {
+            // Content type + metadata
+            HStack(spacing: 4) {
+                Image(systemName: item.contentType.systemImage)
+                    .font(.system(size: 9))
+                Text(item.contentType.displayName)
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .foregroundStyle(.quaternary)
+
+            if let count = item.characterCount, item.contentType != .image {
+                Text("\u{00B7}")
+                    .foregroundStyle(.quaternary)
+                    .font(.system(size: 10))
+                Text("\(count) chars")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.quaternary)
+            }
+
+            if item.ocrText != nil {
+                Text("\u{00B7}")
+                    .foregroundStyle(.quaternary)
+                    .font(.system(size: 10))
+                Text("OCR")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.quaternary)
+            }
+
+            Spacer()
+
+            // Hover actions
+            if isHovered {
+                HStack(spacing: 2) {
+                    Button {
+                        appState.toggleDiffSelection(item)
+                    } label: {
+                        Image(systemName: isSelectedForCompare ? "arrow.left.arrow.right.circle.fill" : "arrow.left.arrow.right")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(isSelectedForCompare ? .blue : .secondary)
+                            .frame(width: 24, height: 24)
+                            .background {
+                                Circle()
+                                    .fill(isSelectedForCompare ? Color.blue.opacity(0.1) : Color.primary.opacity(0.06))
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .help(isSelectedForCompare ? "Deselect for Compare" : "Compare")
+
+                    if item.textContent != nil || item.contentType == .image {
+                        ActionsMenu(item: item)
+                    }
+
+                    PinButton(isPinned: item.isPinned, action: onPin)
+
+                    DeleteButton(action: onDelete)
+
+                    CopyButton(action: { performCopy() })
+                }
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.9).combined(with: .opacity),
+                    removal: .opacity
+                ))
+            }
+        }
+    }
+
+    // MARK: - Card Styling
+
+    private var cardBackground: Color {
+        if justCopied {
+            return Color.green.opacity(0.04)
+        } else if isSelectedForCompare {
+            return Color.blue.opacity(0.04)
+        } else if appState.mergeSelection.contains(item.id) {
+            return Color.purple.opacity(0.05)
+        } else if isSelected {
+            return Color.accentColor.opacity(0.06)
+        } else {
+            return Color(nsColor: .controlBackgroundColor)
+        }
+    }
+
+    private var cardBorder: Color {
+        if isSelectedForCompare {
+            return Color.blue.opacity(0.3)
+        } else if appState.mergeSelection.contains(item.id) {
+            return Color.purple.opacity(0.3)
+        } else if isSelected {
+            return Color.accentColor.opacity(0.3)
+        } else {
+            return Color.primary.opacity(isHovered ? 0.08 : 0.04)
+        }
+    }
+
+    private var borderWidth: CGFloat {
+        (isSelectedForCompare || appState.mergeSelection.contains(item.id) || isSelected) ? 1.5 : 0.5
+    }
+
+    // MARK: - Actions
+
+    private func performCopy() {
+        onCopy()
+        withAnimation(Constants.Animation.bouncy) {
+            justCopied = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            withAnimation(Constants.Animation.smooth) {
+                justCopied = false
             }
         }
     }
@@ -307,7 +350,7 @@ struct ClipboardItemRow: View {
         Divider()
 
         Button { appState.toggleDiffSelection(item) } label: {
-            Label(appState.diffSelection.contains(where: { $0.id == item.id }) ? "Deselect for Compare" : "Select for Compare",
+            Label(isSelectedForCompare ? "Deselect for Compare" : "Select for Compare",
                   systemImage: "arrow.left.arrow.right")
         }
 
@@ -341,22 +384,23 @@ struct ClipboardItemRow: View {
     }
 }
 
-// MARK: - Metadata Pill
+// MARK: - Source App Icon
 
-struct MetadataPill: View {
-    let text: String
+private struct SourceAppIcon: View {
+    let bundleID: String
 
     var body: some View {
-        Text(text)
-            .font(.system(size: 9, weight: .medium))
-            .foregroundStyle(.tertiary)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 1.5)
-            .background {
-                Capsule()
-                    .fill(Color.primary.opacity(0.04))
-            }
-            .lineLimit(1)
-            .fixedSize()
+        if let icon = appIcon {
+            Image(nsImage: icon)
+                .resizable()
+                .frame(width: 14, height: 14)
+                .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+        }
+    }
+
+    private var appIcon: NSImage? {
+        let workspace = NSWorkspace.shared
+        guard let url = workspace.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
+        return workspace.icon(forFile: url.path)
     }
 }

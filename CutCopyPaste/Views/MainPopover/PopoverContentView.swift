@@ -36,12 +36,6 @@ struct PopoverContentView: View {
                     WorkspaceFilterView()
                 }
 
-                // Subtle separator
-                Rectangle()
-                    .fill(Color.primary.opacity(0.06))
-                    .frame(height: 0.5)
-                    .padding(.horizontal, 14)
-
                 // Content
                 if appState.selectedCategory == .snippets {
                     SnippetListView()
@@ -194,56 +188,13 @@ struct PopoverContentView: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            HStack(spacing: 6) {
-                Image(systemName: appState.pasteStackManager.isActive ? "clipboard.fill" : "clipboard.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor.opacity(0.7))
-
-                Text("CutCopyPaste")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary.opacity(0.7))
-            }
+            Text("CutCopyPaste")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.8))
 
             Spacer()
 
-            HStack(spacing: 2) {
-                // Paste Stack toggle — always visible
-                Button {
-                    appState.pasteStackManager.isActive
-                    ? appState.pasteStackManager.deactivate()
-                    : appState.pasteStackManager.activate()
-                } label: {
-                    Image(systemName: "square.stack.3d.up")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(appState.pasteStackManager.isActive ? Color.purple : Color.secondary)
-                        .frame(width: 26, height: 26)
-                        .background {
-                            Circle()
-                                .fill(appState.pasteStackManager.isActive ? Color.purple.opacity(0.12) : Color.primary.opacity(0.04))
-                        }
-                }
-                .buttonStyle(.plain)
-                .help(appState.pasteStackManager.isActive ? "Exit Paste Stack" : "Paste Stack Mode")
-
-                // Merge mode toggle — always visible
-                Button {
-                    appState.isMergeMode.toggle()
-                    if !appState.isMergeMode {
-                        appState.clearMergeSelection()
-                    }
-                } label: {
-                    Image(systemName: "arrow.triangle.merge")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(appState.isMergeMode ? Color.purple : Color.secondary)
-                        .frame(width: 26, height: 26)
-                        .background {
-                            Circle()
-                                .fill(appState.isMergeMode ? Color.purple.opacity(0.12) : Color.primary.opacity(0.04))
-                        }
-                }
-                .buttonStyle(.plain)
-                .help(appState.isMergeMode ? "Exit Merge Mode" : "Merge Clips")
-
+            HStack(spacing: 4) {
                 // Settings
                 Button {
                     openSettings()
@@ -251,17 +202,35 @@ struct PopoverContentView: View {
                     Image(systemName: "gear")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.tertiary)
-                        .frame(width: 26, height: 26)
-                        .background {
-                            Circle()
-                                .fill(Color.primary.opacity(0.04))
-                        }
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .help("Settings")
 
-                // Overflow menu — less frequent actions
+                // Overflow menu
                 Menu {
+                    Button {
+                        appState.pasteStackManager.isActive
+                        ? appState.pasteStackManager.deactivate()
+                        : appState.pasteStackManager.activate()
+                    } label: {
+                        Label(appState.pasteStackManager.isActive ? "Exit Paste Stack" : "Paste Stack Mode",
+                              systemImage: "square.stack.3d.up")
+                    }
+
+                    Button {
+                        appState.isMergeMode.toggle()
+                        if !appState.isMergeMode {
+                            appState.clearMergeSelection()
+                        }
+                    } label: {
+                        Label(appState.isMergeMode ? "Exit Merge Mode" : "Merge Clips",
+                              systemImage: "arrow.triangle.merge")
+                    }
+
+                    Divider()
+
                     Button {
                         NSApp.activate(ignoringOtherApps: true)
                         openWindow(id: "analytics")
@@ -271,25 +240,22 @@ struct PopoverContentView: View {
 
                     Divider()
 
-                    Button {
+                    Button(role: .destructive) {
                         appState.clearAll()
                     } label: {
                         Label("Clear All", systemImage: "trash")
                     }
                 } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 12, weight: .semibold))
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.tertiary)
-                        .frame(width: 26, height: 26)
-                        .background {
-                            Circle()
-                                .fill(Color.primary.opacity(0.04))
-                        }
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
-                .frame(width: 26)
+                .frame(width: 28)
                 .help("More options")
             }
         }
@@ -364,44 +330,31 @@ struct PopoverContentView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 0.5)
+        HStack(spacing: 4) {
+            let count = appState.clipboardItems.count
+            Text("\(count) \(count == 1 ? "clip" : "clips")")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.quaternary)
 
-            HStack(spacing: 4) {
-                let count = appState.clipboardItems.count
-                Text("\(count)")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.quaternary)
-                Text(count == 1 ? "clip" : "clips")
+            if appState.pasteStackManager.isActive {
+                Text("\u{00B7} Stack: \(appState.pasteStackManager.depth)")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.quaternary)
-
-                if appState.pasteStackManager.isActive {
-                    Text("| Stack: \(appState.pasteStackManager.depth)")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.purple.opacity(0.5))
-                }
-
-                Spacer()
-
-                if appState.isMergeMode {
-                    Text("Select items to merge")
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(.purple.opacity(0.5))
-                } else if appState.diffSelection.count == 1 {
-                    Text("Select one more to compare")
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(.blue.opacity(0.5))
-                } else {
-                    Text("\u{2318} double-click to copy")
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(.quaternary)
-                }
+                    .foregroundStyle(.purple.opacity(0.5))
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
+
+            Spacer()
+
+            if appState.isMergeMode {
+                Text("Select items to merge")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.purple.opacity(0.5))
+            } else if appState.diffSelection.count == 1 {
+                Text("Select one more to compare")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.blue.opacity(0.5))
+            }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 5)
     }
 }

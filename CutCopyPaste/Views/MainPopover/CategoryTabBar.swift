@@ -44,46 +44,34 @@ enum CategoryFilter: String, CaseIterable, Identifiable {
 
 struct CategoryTabBar: View {
     @Binding var selection: CategoryFilter
-    @Namespace private var tabNamespace
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(CategoryFilter.allCases) { category in
-                Button {
-                    withAnimation(Constants.Animation.snappy) {
-                        selection = category
-                    }
-                } label: {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(CategoryFilter.allCases) { category in
                     let isSelected = selection == category
-                    HStack(spacing: 3) {
-                        Image(systemName: category.systemImage)
-                            .font(.system(size: 10, weight: .semibold))
-                        Text(category.displayName)
-                            .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .foregroundStyle(isSelected ? .primary : .secondary)
-                    .background {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .fill(Color(nsColor: .controlBackgroundColor))
-                                .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-                                .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
+                    Button {
+                        withAnimation(Constants.Animation.snappy) {
+                            selection = category
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: category.systemImage)
+                                .font(.system(size: 10, weight: .medium))
+                            Text(category.displayName)
+                                .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .foregroundStyle(isSelected ? .white : .secondary)
+                        .background {
+                            Capsule()
+                                .fill(isSelected ? Color.accentColor : Color.primary.opacity(0.05))
                         }
                     }
-                    .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .help(category.displayName)
             }
-        }
-        .padding(3)
-        .background {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
         }
     }
 }

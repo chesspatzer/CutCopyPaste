@@ -15,9 +15,12 @@ enum Constants {
     enum UI {
         static let popoverDefaultWidth: CGFloat = 400
         static let popoverDefaultHeight: CGFloat = 560
-        static let cornerRadius: CGFloat = 10
-        static let rowPaddingCompact: CGFloat = 7
-        static let rowPaddingComfortable: CGFloat = 10
+        static let cornerRadius: CGFloat = 12
+        static let rowPaddingCompact: CGFloat = 10
+        static let rowPaddingComfortable: CGFloat = 12
+        static let cardShadowRadius: CGFloat = 2
+        static let cardShadowOpacity: Double = 0.06
+        static let cardSpacing: CGFloat = 6
     }
 
     enum Storage {

@@ -126,19 +126,20 @@ Context-aware actions appear on hover based on content type:
 
 ## UI
 
-- Menubar popover (400x560 default, resizable in settings)
-- **Always-visible copy button** on every row — no guessing, just click to copy
-- Hover actions expand to show: compare, transforms/actions, pin, and delete
-- **Labeled tab bar** — all category tabs show both icon and label for clarity
-- **Dedicated header buttons** for Paste Stack and Merge mode (not hidden in a menu)
-- **"Actions" label** on the transform menu — no more cryptic wand icon
-- **Compare bar** appears when selecting items for diff, with clear "Compare" button
-- **Sensitive data tooltip** — hover the warning badge to see what type of sensitive data was detected
-- Metadata pills: timestamp, source app, workspace, character count, OCR badge
+Clean, card-based design:
+
+- **Card layout** — each clip is a self-contained card with source app icon, content preview, and metadata
+- **Source app icons** from macOS displayed on each card for instant visual identification
+- **Rich content previews** — text at 13pt with 3-line limit, full-width image thumbnails, color swatches for hex codes
+- **Flat pill tab bar** — accent-filled capsule for the active filter, clean flat pills for the rest
+- **Larger search bar** — prominent placement with 13pt font, "Search your clipboard..." placeholder
+- **Minimal header** — clean app title with just settings and overflow menu, no clutter
+- **Hover action bar** — compare, transforms, pin, delete, and copy buttons appear in the card footer on hover
+- **Compare bar** floats above the footer when items are selected for diff
+- **Sensitive data tooltip** — hover the warning badge to see what types were detected
 - Overlay-based modals (no system sheet conflicts with menubar windows)
-- Color swatch preview for hex color strings
 - Keyboard navigation: arrow keys to select, Enter to copy, Escape to deselect
-- Staggered list entry animations
+- Staggered card entry animations
 
 ---
 
