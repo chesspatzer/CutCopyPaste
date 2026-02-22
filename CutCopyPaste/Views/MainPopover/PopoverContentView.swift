@@ -231,24 +231,6 @@ struct PopoverContentView: View {
                 .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
 
-            // Favorites Panel overlay
-            if appState.showFavoritesPanel {
-                overlayBackdrop {
-                    withAnimation(Constants.Animation.snappy) {
-                        appState.showFavoritesPanel = false
-                    }
-                }
-                FavoritesPanelView(
-                    onDismiss: {
-                        withAnimation(Constants.Animation.snappy) {
-                            appState.showFavoritesPanel = false
-                        }
-                    }
-                )
-                .environmentObject(appState)
-                .transition(.scale(scale: 0.95).combined(with: .opacity))
-            }
-
             // Undo delete toast
             if appState.showUndoToast {
                 VStack {
@@ -266,7 +248,6 @@ struct PopoverContentView: View {
         .animation(Constants.Animation.snappy, value: appState.showOnboarding)
         .animation(Constants.Animation.snappy, value: appState.showUndoToast)
         .animation(Constants.Animation.snappy, value: appState.showSmartCollections)
-        .animation(Constants.Animation.snappy, value: appState.showFavoritesPanel)
         .animation(Constants.Animation.snappy, value: appState.activeSmartCollection?.id)
         .onAppear {
             appState.unseenCopyCount = 0
@@ -323,21 +304,6 @@ struct PopoverContentView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Smart Collections")
-
-                // Favorites
-                Button {
-                    withAnimation(Constants.Animation.snappy) {
-                        appState.showFavoritesPanel = true
-                    }
-                } label: {
-                    Image(systemName: "pin.fill")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.orange.opacity(0.6))
-                        .frame(width: 28, height: 28)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .help("Favorites")
 
                 // Settings
                 SettingsLink {

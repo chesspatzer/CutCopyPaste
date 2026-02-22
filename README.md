@@ -173,12 +173,6 @@ Context-aware actions appear on hover based on content type:
 - **Export to File** — save any item as .txt, .png, or .rtf via save panel
 - **Create GitHub Gist** — attempts `gh gist create` if GitHub CLI is installed
 
-### Pin Board (Favorites)
-- Dedicated overlay panel for pinned/favorite items
-- Quick access from header pin icon
-- Copy and unpin actions on hover
-- Double-click to paste from favorites
-
 ### Copy Count Badge
 - Menu bar icon changes to filled clipboard when new items are captured since last viewed
 - Unseen count resets automatically when popover is opened

@@ -61,9 +61,6 @@ final class AppState: ObservableObject {
     @Published var activeSmartCollection: SmartCollection? = nil
     @Published var showSmartCollections: Bool = false
 
-    // UI State — Favorites Panel (Feature 8)
-    @Published var showFavoritesPanel: Bool = false
-
     // UI State — Copy Count Badge (Feature 9)
     @Published var unseenCopyCount: Int = 0
 
@@ -350,22 +347,6 @@ final class AppState: ObservableObject {
                 .joined(separator: " ")
         }
         copyText(formatted)
-    }
-
-    // MARK: - Pin Reorder
-
-    func reorderPinnedItems(from source: IndexSet, to destination: Int) {
-        var pinned = clipboardItems.filter { $0.isPinned }.sorted { $0.pinnedOrder < $1.pinnedOrder }
-        pinned.move(fromOffsets: source, toOffset: destination)
-        for (index, item) in pinned.enumerated() {
-            item.pinnedOrder = index
-        }
-        Task {
-            for item in pinned {
-                await storageService.updatePinnedOrder(item.id, order: item.pinnedOrder)
-            }
-            refreshItems()
-        }
     }
 
     // MARK: - Transform Operations
