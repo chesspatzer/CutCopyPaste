@@ -144,10 +144,8 @@ struct SnippetEditorView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .frame(width: 380)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(color: .black.opacity(0.2), radius: 20, y: 8)
         .onAppear {
             if let snippet {
                 title = snippet.title

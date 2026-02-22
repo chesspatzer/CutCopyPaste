@@ -30,9 +30,10 @@ struct CutCopyPasteApp: App {
             PopoverContentView()
                 .environmentObject(appState)
                 .frame(
-                    width: appState.preferences.popoverWidth,
-                    height: appState.preferences.popoverHeight
+                    width: appState.showDiffView ? 620 : appState.preferences.popoverWidth,
+                    height: appState.showDiffView ? 520 : appState.preferences.popoverHeight
                 )
+                .animation(Constants.Animation.snappy, value: appState.showDiffView)
         } label: {
             Image(systemName: "clipboard")
                 .symbolRenderingMode(.hierarchical)

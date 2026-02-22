@@ -5,12 +5,6 @@ struct DiffView: View {
     let rightItem: ClipboardItem
     let onDismiss: () -> Void
     @State private var diffResult: DiffResult?
-    @State private var diffMode: DiffMode = .sideBySide
-
-    enum DiffMode: String, CaseIterable {
-        case sideBySide = "Side by Side"
-        case unified = "Unified"
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,11 +13,6 @@ struct DiffView: View {
                 Text("Compare Clips")
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
-                Picker("", selection: $diffMode) {
-                    ForEach(DiffMode.allCases, id: \.self) { Text($0.rawValue) }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
                 Button { onDismiss() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 9, weight: .bold))
@@ -34,20 +23,32 @@ struct DiffView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.top, 14)
             .padding(.bottom, 10)
 
             // Stats bar
             if let diff = diffResult {
                 HStack(spacing: 12) {
-                    Label("\(diff.addedCount) added", systemImage: "plus.circle")
-                        .foregroundStyle(.green)
-                    Label("\(diff.removedCount) removed", systemImage: "minus.circle")
-                        .foregroundStyle(.red)
-                    Label("\(diff.unchangedCount) unchanged", systemImage: "equal.circle")
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 3) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("\(diff.addedCount)")
+                            .foregroundStyle(.green)
+                    }
+                    HStack(spacing: 3) {
+                        Image(systemName: "minus.circle.fill")
+                            .foregroundStyle(.red)
+                        Text("\(diff.removedCount)")
+                            .foregroundStyle(.red)
+                    }
+                    HStack(spacing: 3) {
+                        Image(systemName: "equal.circle.fill")
+                            .foregroundStyle(.secondary)
+                        Text("\(diff.unchangedCount)")
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                .font(.caption)
+                .font(.system(size: 11, weight: .medium))
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
             }
@@ -59,12 +60,13 @@ struct DiffView: View {
             // Diff content
             if let diff = diffResult {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 0) {
                         ForEach(diff.lines) { line in
                             diffLineView(line)
                         }
                     }
-                    .padding(8)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
                 }
             } else {
                 Spacer()
@@ -72,10 +74,8 @@ struct DiffView: View {
                 Spacer()
             }
         }
-        .frame(width: 500, height: 380)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(color: .black.opacity(0.2), radius: 20, y: 8)
         .onAppear { computeDiff() }
     }
 
@@ -87,29 +87,36 @@ struct DiffView: View {
 
     @ViewBuilder
     private func diffLineView(_ line: DiffLine) -> some View {
-        HStack(spacing: 0) {
-            Text(line.leftLineNumber.map(String.init) ?? "")
-                .frame(width: 35, alignment: .trailing)
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.tertiary)
-            Text(line.rightLineNumber.map(String.init) ?? "")
-                .frame(width: 35, alignment: .trailing)
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.tertiary)
+        HStack(alignment: .top, spacing: 0) {
+            // Single compact line number
+            Text(lineNumber(line))
+                .frame(width: 28, alignment: .trailing)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.quaternary)
 
+            // +/- indicator
             Text(lineIndicator(line.type))
-                .frame(width: 20)
-                .font(.system(size: 10, design: .monospaced))
+                .frame(width: 16)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .foregroundStyle(lineColor(line.type))
 
+            // Content — wraps instead of overflowing
             Text(line.content)
                 .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(line.type == .unchanged ? .secondary : .primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 1)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 1.5)
         .background(lineBackground(line.type))
+    }
+
+    private func lineNumber(_ line: DiffLine) -> String {
+        if let n = line.leftLineNumber { return "\(n)" }
+        if let n = line.rightLineNumber { return "\(n)" }
+        return ""
     }
 
     private func lineIndicator(_ type: DiffLineType) -> String {
