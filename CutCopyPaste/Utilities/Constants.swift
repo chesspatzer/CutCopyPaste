@@ -9,7 +9,7 @@ enum Constants {
         static let maxHistoryCount = 500
         static let retentionDays = 30
         static let pollInterval: TimeInterval = 0.5
-        static let thumbnailMaxSize: CGFloat = 64
+        static let thumbnailMaxSize: CGFloat = 200
     }
 
     enum UI {

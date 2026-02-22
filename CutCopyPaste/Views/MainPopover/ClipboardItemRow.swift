@@ -145,63 +145,167 @@ struct ClipboardItemRow: View {
     private var contentPreview: some View {
         switch item.contentType {
         case .image:
-            if let thumbData = item.thumbnailData, let nsImage = NSImage(data: thumbData) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: displayMode == .compact ? 48 : 72)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
-                    }
-            } else {
-                Label("Image", systemImage: "photo")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
+            imagePreview
 
         case .file:
-            let count = item.filePaths?.count ?? 0
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(count) file\(count == 1 ? "" : "s")")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
-                if let first = item.filePaths?.first {
-                    Text(first.components(separatedBy: "/").last ?? first)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-            }
+            filePreview
 
         case .link:
-            Text(item.isMasked ? displayText : (item.textContent?.firstLine ?? "Link"))
-                .font(.system(size: 13))
-                .foregroundColor(item.isMasked ? .secondary : .blue)
-                .lineLimit(displayMode == .compact ? 2 : 3)
-                .truncationMode(.tail)
-
-        case .text, .richText:
-            HStack(spacing: 6) {
-                if let text = item.textContent, !item.isMasked {
-                    if let color = parseHexColor(text.trimmingCharacters(in: .whitespacesAndNewlines)) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(color)
-                            .frame(width: 16, height: 16)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
-                            }
-                    }
-                }
+            if item.isMasked {
                 Text(displayText)
                     .font(.system(size: 13))
-                    .lineLimit(displayMode == .compact ? 2 : 3)
-                    .truncationMode(.tail)
-                    .foregroundStyle(.primary.opacity(0.9))
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            } else {
+                linkPreview
             }
+
+        case .text, .richText:
+            textPreview
+        }
+    }
+
+    // MARK: - Image Preview
+
+    @ViewBuilder
+    private var imagePreview: some View {
+        let imageSource: NSImage? = {
+            if let thumbData = item.thumbnailData, let img = NSImage(data: thumbData) {
+                return img
+            }
+            if let fullData = item.imageData, let img = NSImage(data: fullData) {
+                return img
+            }
+            return nil
+        }()
+
+        if let nsImage = imageSource {
+            Image(nsImage: nsImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: displayMode == .compact ? 80 : 120)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+                }
+        } else {
+            HStack {
+                Spacer()
+                Image(systemName: "photo")
+                    .font(.system(size: 24, weight: .light))
+                    .foregroundStyle(.tertiary)
+                Spacer()
+            }
+            .frame(height: 60)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.primary.opacity(0.03))
+            }
+        }
+    }
+
+    // MARK: - Link Preview
+
+    @ViewBuilder
+    private var linkPreview: some View {
+        let urlString = item.textContent?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let url = URL(string: urlString)
+        let host = url?.host ?? urlString
+        let domain = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        let path = url?.path ?? ""
+        let displayPath = path == "/" ? "" : path
+
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                // Favicon placeholder with domain initial
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 28, height: 28)
+                    Text(String(domain.prefix(1)).uppercased())
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(domain)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.primary.opacity(0.85))
+                        .lineLimit(1)
+
+                    if !displayPath.isEmpty {
+                        Text(displayPath)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.blue.opacity(0.5))
+            }
+
+            // Full URL
+            Text(urlString)
+                .font(.system(size: 11))
+                .foregroundStyle(.blue.opacity(0.7))
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .padding(10)
+        .background {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.blue.opacity(0.03))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(Color.blue.opacity(0.08), lineWidth: 0.5)
+                }
+        }
+    }
+
+    // MARK: - File Preview
+
+    private var filePreview: some View {
+        let count = item.filePaths?.count ?? 0
+        return VStack(alignment: .leading, spacing: 2) {
+            Text("\(count) file\(count == 1 ? "" : "s")")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
+            if let first = item.filePaths?.first {
+                Text(first.components(separatedBy: "/").last ?? first)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+    }
+
+    // MARK: - Text Preview
+
+    private var textPreview: some View {
+        HStack(spacing: 6) {
+            if let text = item.textContent, !item.isMasked {
+                if let color = parseHexColor(text.trimmingCharacters(in: .whitespacesAndNewlines)) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(color)
+                        .frame(width: 16, height: 16)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
+                        }
+                }
+            }
+            Text(displayText)
+                .font(.system(size: 13))
+                .lineLimit(displayMode == .compact ? 2 : 3)
+                .truncationMode(.tail)
+                .foregroundStyle(.primary.opacity(0.9))
         }
     }
 
