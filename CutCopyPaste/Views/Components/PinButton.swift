@@ -32,6 +32,7 @@ struct PinButton: View {
         }
         .buttonStyle(.plain)
         .help(isPinned ? "Unpin" : "Pin to keep")
+        .accessibilityLabel(isPinned ? "Unpin item" : "Pin item")
         .animation(Constants.Animation.bouncy, value: isPinned)
     }
 }

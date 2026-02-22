@@ -136,6 +136,11 @@ Context-aware actions appear on hover based on content type:
 - Deleting an item shows a floating toast with an **Undo** button
 - Auto-dismisses after 4 seconds — re-saves the item if you tap Undo in time
 
+### Export & Import
+- **Export** entire clipboard history to JSON (including images as base64)
+- **Import** from a previously exported file to restore or migrate between Macs
+- Available in Settings > General > Data Transfer
+
 ---
 
 ## UI
@@ -156,6 +161,8 @@ Clean, card-based design:
 - **Undo toast** — floating material-backed toast with undo action on delete
 - Keyboard navigation: arrow keys to select, Enter to auto-paste, Escape to deselect
 - Staggered card entry animations
+- **Haptic feedback** on copy, pin, and delete actions
+- **Full VoiceOver support** — accessibility labels on all interactive elements
 - **Performance optimized** — static caches for app icons and hex colors, lazy image loading, pre-computed URL parsing, snappy animations (~150ms)
 
 ---
@@ -164,12 +171,13 @@ Clean, card-based design:
 
 | Tab | Options |
 |---|---|
-| **General** | Max history, retention days, deduplication, launch at login, sound on copy |
+| **General** | Max history, retention days, deduplication, launch at login, sound on copy, export/import |
 | **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app |
 | **Security** | Detect sensitive data, auto-mask |
 | **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), **live shortcut recording** — click and press any key combo to rebind |
 | **Exclusions** | Apps to never capture from (1Password, Bitwarden, LastPass, Keychain Access by default) |
 | **Rules** | Create, edit, enable/disable, and test clipboard auto-transform rules |
+| **About** | Version info, architecture, build details |
 
 ---
 

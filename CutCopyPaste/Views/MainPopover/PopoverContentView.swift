@@ -227,6 +227,7 @@ struct PopoverContentView: View {
                 Capsule()
                     .fill(.green.opacity(0.08))
             }
+            .accessibilityLabel("Privacy: all data stays offline on your Mac")
 
             Spacer()
 
@@ -325,6 +326,8 @@ struct PopoverContentView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Color.blue.opacity(0.05))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Compare bar, \(appState.diffSelection.count) of 2 items selected")
     }
 
     // MARK: - Merge Bar
@@ -399,6 +402,8 @@ struct PopoverContentView: View {
                 }
                 .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Item deleted. Tap undo to restore.")
     }
 
     // MARK: - Footer

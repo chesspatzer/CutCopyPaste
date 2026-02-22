@@ -35,6 +35,11 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Rules", systemImage: "wand.and.rays")
                 }
+
+            AboutSettingsView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
         }
         .frame(width: 550, height: 420)
     }

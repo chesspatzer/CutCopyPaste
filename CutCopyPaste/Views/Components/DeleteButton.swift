@@ -26,5 +26,6 @@ struct DeleteButton: View {
             }
         }
         .help("Delete")
+        .accessibilityLabel("Delete item")
     }
 }

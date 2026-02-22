@@ -107,11 +107,34 @@ struct ClipboardItemRow: View {
         .contextMenu {
             contextMenuItems
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Double-click to paste. Right-click for more options.")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .onAppear {
             if item.contentType == .image {
                 loadImageIfNeeded()
             }
         }
+    }
+
+    private var accessibilityDescription: String {
+        var parts: [String] = []
+        parts.append(item.contentType.displayName)
+        if item.isPinned { parts.append("pinned") }
+        if let app = item.sourceAppName { parts.append("from \(app)") }
+        switch item.contentType {
+        case .text, .link, .richText:
+            if let text = item.textContent { parts.append(String(text.prefix(100))) }
+        case .image:
+            if let ocrText = item.ocrText { parts.append("OCR: \(String(ocrText.prefix(60)))") }
+        case .file:
+            let count = item.filePaths?.count ?? 0
+            parts.append("\(count) file\(count == 1 ? "" : "s")")
+        }
+        if item.isMasked { parts.append("masked") }
+        if item.sensitiveDataTypes != nil { parts.append("contains sensitive data") }
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - Top Bar

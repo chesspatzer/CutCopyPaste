@@ -70,8 +70,12 @@ struct CategoryTabBar: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(category.displayName) filter")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Category filters")
     }
 }

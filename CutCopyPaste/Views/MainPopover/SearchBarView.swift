@@ -50,6 +50,8 @@ struct SearchBarView: View {
             isHovered = hovering
         }
         .animation(Constants.Animation.quick, value: isFocused)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Search clipboard history")
         .onAppear {
             isFocused = true
         }

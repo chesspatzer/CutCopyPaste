@@ -37,5 +37,6 @@ struct CopyButton: View {
         }
         .buttonStyle(.plain)
         .help("Copy to clipboard")
+        .accessibilityLabel(showCheckmark ? "Copied" : "Copy to clipboard")
     }
 }

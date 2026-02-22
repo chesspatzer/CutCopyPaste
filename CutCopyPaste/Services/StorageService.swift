@@ -239,6 +239,11 @@ actor StorageService {
 
     // MARK: - Retention
 
+    /// Public entry point for the periodic retention timer
+    func runRetentionCleanup() {
+        enforceRetentionLimits()
+    }
+
     private func enforceRetentionLimits() {
         let prefs = UserPreferences.shared
 

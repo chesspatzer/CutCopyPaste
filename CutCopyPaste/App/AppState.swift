@@ -110,7 +110,17 @@ final class AppState: ObservableObject {
         if !preferences.hasCompletedOnboarding {
             showOnboarding = true
         }
+
+        // Periodic retention cleanup every 15 minutes
+        retentionTimer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { await self.storageService.runRetentionCleanup() }
+        }
+        // Run once immediately on launch
+        Task { await storageService.runRetentionCleanup() }
     }
+
+    private var retentionTimer: Timer?
 
     // MARK: - Data Operations
 
@@ -173,7 +183,8 @@ final class AppState: ObservableObject {
             }
         }
 
-        // Update usage stats
+        // Haptic + usage stats
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
         Task {
             await storageService.touchItem(item.id)
         }
@@ -225,6 +236,7 @@ final class AppState: ObservableObject {
     }
 
     func togglePin(_ item: ClipboardItem) {
+        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         Task {
             await storageService.togglePin(item.id)
             refreshItems()
@@ -232,6 +244,7 @@ final class AppState: ObservableObject {
     }
 
     func deleteItem(_ item: ClipboardItem) {
+        NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
         lastDeletedItem = item
         showUndoToast = true
 
