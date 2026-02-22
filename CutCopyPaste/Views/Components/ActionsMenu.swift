@@ -34,6 +34,60 @@ struct ActionsMenu: View {
                 }
             }
 
+            // Copy as... formats
+            if let text = item.textContent {
+                Section("Copy as...") {
+                    ForEach(CopyFormat.allCases, id: \.rawValue) { format in
+                        Button {
+                            appState.copyFormattedText(text, format: format)
+                        } label: {
+                            Label(format.displayName, systemImage: format.systemImage)
+                        }
+                    }
+
+                    // Markdown code block with detected language
+                    if let lang = item.detectedLanguage {
+                        Button {
+                            let formatted = "```\(lang)\n\(text)\n```"
+                            appState.copyText(formatted)
+                        } label: {
+                            Label("Code Block (\(SyntaxHighlighter.displayName(for: lang)))", systemImage: "curlybraces")
+                        }
+                    }
+                }
+            }
+
+            // Share & Export
+            Section("Share & Export") {
+                if let text = item.textContent {
+                    Button {
+                        appState.copyText(ShareService.shared.formatForSlack(text, language: item.detectedLanguage))
+                    } label: {
+                        Label("Copy for Slack", systemImage: "bubble.left")
+                    }
+
+                    Button {
+                        appState.copyText(ShareService.shared.formatForDiscord(text, language: item.detectedLanguage))
+                    } label: {
+                        Label("Copy for Discord", systemImage: "bubble.left.fill")
+                    }
+
+                    if item.contentType == .link {
+                        Button {
+                            appState.copyText(ShareService.shared.formatAsMarkdownLink(text))
+                        } label: {
+                            Label("Copy as Markdown Link", systemImage: "link.badge.plus")
+                        }
+                    }
+                }
+
+                Button {
+                    ShareService.shared.exportToFile(item)
+                } label: {
+                    Label("Export to File...", systemImage: "square.and.arrow.up")
+                }
+            }
+
             if item.contentType == .image && item.ocrText == nil {
                 Section("Image") {
                     Button {

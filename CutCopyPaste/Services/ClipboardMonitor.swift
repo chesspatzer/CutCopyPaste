@@ -94,6 +94,11 @@ final class ClipboardMonitor: ObservableObject {
             item.summary = TextSummarizer.shared.summarize(text).oneLiner
         }
 
+        // Detect programming language for syntax highlighting
+        if let text = item.textContent {
+            item.detectedLanguage = SyntaxHighlighter.shared.detectLanguage(text)
+        }
+
         Task {
             // Apply clipboard rules (auto-transforms)
             if let text = item.textContent, let ruleEngine {

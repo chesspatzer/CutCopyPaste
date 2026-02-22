@@ -31,6 +31,10 @@ struct AppearanceSettingsView: View {
                 Toggle(isOn: $prefs.showSourceApp) {
                     Label("Show source app", systemImage: "app.badge")
                 }
+
+                Toggle(isOn: $prefs.timeGroupedHistory) {
+                    Label("Group items by time", systemImage: "calendar.day.timeline.left")
+                }
             } header: {
                 Text("Item Display")
             }

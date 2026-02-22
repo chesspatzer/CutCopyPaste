@@ -122,6 +122,53 @@ Context-aware actions appear on hover based on content type:
 - **UUIDs**: detect and regenerate
 - **Timestamps**: convert between epoch, ISO 8601, and human-readable
 
+### Syntax Highlighting
+- Automatic programming language detection on capture (Swift, Python, JavaScript, TypeScript, Go, Rust, Java, Ruby, C, HTML, CSS, SQL, Shell, JSON, YAML, XML)
+- Color-coded syntax preview in clipboard items — keywords, strings, comments, numbers, types, and functions
+- Language badge displayed on each code snippet card
+- Full syntax-highlighted view in item detail overlay
+- Dark and light mode aware color schemes
+
+### Regex Search
+- Toggle between natural language search and regex pattern matching
+- Visual indicator for regex mode with monospaced input font
+- Invalid regex patterns flagged with warning icon
+- Full NSRegularExpression support for power users
+
+### Smart Collections
+- Auto-categorized views: Code Snippets, URLs & Links, Images, From Xcode, From Browsers, From Terminal, Today, This Week, Frequently Used, Long Text, With OCR Text, Sensitive Data
+- Grid-based collection browser with item counts
+- One-click filtering from any collection
+- Active collection shown as dismissible chip
+
+### Time-Grouped History
+- Items automatically grouped by time period: Just Now, Today, Yesterday, This Week, This Month, Earlier
+- Pinned items always appear in their own section at the top
+- Section headers with item counts
+- Toggle on/off in Appearance settings
+
+### Copy as... Formats
+- Copy clipboard text in different formats from the actions menu or context menu:
+  - Plain Text, Markdown Code Block, HTML `<pre>` Block, Quoted Text, Escaped String, Single Line
+- Language-aware code blocks (automatically uses detected language)
+
+### Share & Export
+- **Copy for Slack** — wraps code in triple-backtick block with language tag
+- **Copy for Discord** — same format for Discord code blocks
+- **Copy as Markdown Link** — converts URLs to `[domain](url)` format
+- **Export to File** — save any item as .txt, .png, or .rtf via save panel
+- **Create GitHub Gist** — attempts `gh gist create` if GitHub CLI is installed
+
+### Pin Board (Favorites)
+- Dedicated overlay panel for pinned/favorite items
+- Quick access from header pin icon
+- Copy and unpin actions on hover
+- Double-click to paste from favorites
+
+### Copy Count Badge
+- Menu bar icon changes to filled clipboard when new items are captured since last viewed
+- Unseen count resets automatically when popover is opened
+
 ### Paste & Auto-Type
 - **Double-click** or press **Return** to copy an item and auto-paste it into the frontmost app
 - Popover closes automatically, Cmd+V is simulated — seamless one-action paste
@@ -172,7 +219,7 @@ Clean, card-based design:
 | Tab | Options |
 |---|---|
 | **General** | Max history, retention days, deduplication, launch at login, sound on copy, export/import |
-| **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app |
+| **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app, time-grouped history |
 | **Security** | Detect sensitive data, auto-mask |
 | **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), **live shortcut recording** — click and press any key combo to rebind |
 | **Exclusions** | Apps to never capture from (1Password, Bitwarden, LastPass, Keychain Access by default) |
@@ -234,7 +281,7 @@ Or open `CutCopyPaste.xcodeproj` in Xcode and run the **CutCopyPaste** scheme.
 CutCopyPaste/
 ├── App/                    # App entry point, AppState
 ├── Models/                 # SwiftData models (ClipboardItem, Snippet, ClipboardRule)
-├── Services/               # Business logic (17 services)
+├── Services/               # Business logic (20 services)
 │   └── Transforms/         # Transform implementations (9 files, 28+ transforms)
 ├── Views/
 │   ├── MainPopover/        # Primary UI (list, search, tabs, overlays)

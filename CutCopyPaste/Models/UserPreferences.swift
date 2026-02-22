@@ -1,6 +1,42 @@
 import Foundation
 import SwiftUI
 
+enum SearchMode: String, CaseIterable {
+    case natural
+    case regex
+}
+
+enum CopyFormat: String, CaseIterable {
+    case plainText
+    case markdownCodeBlock
+    case htmlPreBlock
+    case quotedText
+    case escapedString
+    case singleLine
+
+    var displayName: String {
+        switch self {
+        case .plainText:         return "Plain Text"
+        case .markdownCodeBlock: return "Markdown Code Block"
+        case .htmlPreBlock:      return "HTML <pre> Block"
+        case .quotedText:        return "Quoted Text"
+        case .escapedString:     return "Escaped String"
+        case .singleLine:        return "Single Line"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .plainText:         return "doc.plaintext"
+        case .markdownCodeBlock: return "chevron.left.forwardslash.chevron.right"
+        case .htmlPreBlock:      return "chevron.left.slash.chevron.right"
+        case .quotedText:        return "text.quote"
+        case .escapedString:     return "character.textbox"
+        case .singleLine:        return "text.alignleft"
+        }
+    }
+}
+
 enum DisplayMode: String, CaseIterable, Identifiable {
     case compact
     case comfortable
@@ -113,6 +149,10 @@ final class UserPreferences: ObservableObject {
     @AppStorage("launchAtLogin") var launchAtLogin: Bool = false
     @AppStorage("playSoundOnCopy") var playSoundOnCopy: Bool = false
 
+    // MARK: - Display
+
+    @AppStorage("timeGroupedHistory") var timeGroupedHistory: Bool = true
+
     // MARK: - Onboarding
 
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
@@ -141,6 +181,7 @@ final class UserPreferences: ObservableObject {
         pasteStackMode = "queue"
         launchAtLogin = false
         playSoundOnCopy = false
+        timeGroupedHistory = true
         objectWillChange.send()
     }
 }

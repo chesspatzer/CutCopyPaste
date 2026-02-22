@@ -10,6 +10,7 @@ struct ClipboardListView: View {
     let onPin: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
 
+    @AppStorage("timeGroupedHistory") private var timeGroupedHistory: Bool = true
     @State private var selectedIndex: Int? = nil
     @State private var appearedIDs: Set<UUID> = []
     @State private var appearCounter: Int = 0
@@ -22,40 +23,11 @@ struct ClipboardListView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
-                    ForEach(items) { item in
-                        ClipboardItemRow(
-                            item: item,
-                            displayMode: displayMode,
-                            showTimestamps: showTimestamps,
-                            showSourceApp: showSourceApp,
-                            isSelected: item.id == selectedItemID,
-                            onCopy: { onCopy(item) },
-                            onAutoPaste: { onAutoPaste(item) },
-                            onPin: { onPin(item) },
-                            onDelete: {
-                                withAnimation(Constants.Animation.snappy) {
-                                    onDelete(item)
-                                }
-                            }
-                        )
-                        .id(item.id)
-                        .opacity(appearedIDs.contains(item.id) ? 1 : 0)
-                        .offset(y: appearedIDs.contains(item.id) ? 0 : 6)
-                        .onAppear {
-                            if !appearedIDs.contains(item.id) {
-                                let order = appearCounter
-                                appearCounter += 1
-                                let delay = Double(min(order, 10)) * Constants.Animation.staggerDelay
-                                withAnimation(Constants.Animation.smooth.delay(delay)) {
-                                    appearedIDs.insert(item.id)
-                                }
-                            }
-                        }
-                    }
+                if timeGroupedHistory {
+                    groupedContent
+                } else {
+                    flatContent
                 }
-                .padding(.horizontal, displayMode == .compact ? 6 : 10)
-                .padding(.vertical, displayMode == .compact ? 4 : 6)
             }
             .scrollIndicators(.hidden)
             .onKeyPress(.upArrow) {
@@ -77,9 +49,85 @@ struct ClipboardListView: View {
                 return .handled
             }
             .onChange(of: items.count) {
-                // Reset selection when item count changes (search, category switch, delete)
                 selectedIndex = nil
                 appearCounter = 0
+            }
+        }
+    }
+
+    // MARK: - Flat List (no grouping)
+
+    private var flatContent: some View {
+        LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
+            ForEach(items) { item in
+                itemRow(item)
+            }
+        }
+        .padding(.horizontal, displayMode == .compact ? 6 : 10)
+        .padding(.vertical, displayMode == .compact ? 4 : 6)
+    }
+
+    // MARK: - Time-Grouped List
+
+    private var groupedContent: some View {
+        let sections = TimeGrouper.group(items)
+        return LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
+            ForEach(sections) { section in
+                // Section header
+                HStack(spacing: 6) {
+                    Text(section.title)
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.06))
+                        .frame(height: 0.5)
+                    Text("\(section.items.count)")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.quaternary)
+                }
+                .padding(.horizontal, displayMode == .compact ? 8 : 12)
+                .padding(.top, section.id == sections.first?.id ? 4 : 10)
+                .padding(.bottom, 2)
+
+                ForEach(section.items) { item in
+                    itemRow(item)
+                }
+            }
+        }
+        .padding(.horizontal, displayMode == .compact ? 6 : 10)
+        .padding(.vertical, displayMode == .compact ? 4 : 6)
+    }
+
+    // MARK: - Item Row
+
+    @ViewBuilder
+    private func itemRow(_ item: ClipboardItem) -> some View {
+        ClipboardItemRow(
+            item: item,
+            displayMode: displayMode,
+            showTimestamps: showTimestamps,
+            showSourceApp: showSourceApp,
+            isSelected: item.id == selectedItemID,
+            onCopy: { onCopy(item) },
+            onAutoPaste: { onAutoPaste(item) },
+            onPin: { onPin(item) },
+            onDelete: {
+                withAnimation(Constants.Animation.snappy) {
+                    onDelete(item)
+                }
+            }
+        )
+        .id(item.id)
+        .opacity(appearedIDs.contains(item.id) ? 1 : 0)
+        .offset(y: appearedIDs.contains(item.id) ? 0 : 6)
+        .onAppear {
+            if !appearedIDs.contains(item.id) {
+                let order = appearCounter
+                appearCounter += 1
+                let delay = Double(min(order, 10)) * Constants.Animation.staggerDelay
+                withAnimation(Constants.Animation.smooth.delay(delay)) {
+                    appearedIDs.insert(item.id)
+                }
             }
         }
     }

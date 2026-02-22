@@ -21,9 +21,37 @@ struct PopoverContentView: View {
 
                 // Search (not shown on snippets tab)
                 if appState.selectedCategory != .snippets {
-                    SearchBarView(text: $appState.searchText)
+                    SearchBarView(text: $appState.searchText, searchMode: $appState.searchMode)
                         .padding(.horizontal, 12)
                         .padding(.bottom, 8)
+                }
+
+                // Active smart collection chip
+                if let collection = appState.activeSmartCollection {
+                    HStack(spacing: 6) {
+                        Image(systemName: collection.systemImage)
+                            .font(.system(size: 10, weight: .medium))
+                        Text(collection.name)
+                            .font(.system(size: 11, weight: .medium))
+                        Button {
+                            withAnimation(Constants.Animation.snappy) {
+                                appState.activeSmartCollection = nil
+                                appState.refreshItems()
+                            }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.accentColor.opacity(0.1)))
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 4)
+                    .transition(.scale.combined(with: .opacity))
                 }
 
                 // Category tabs
@@ -178,6 +206,49 @@ struct PopoverContentView: View {
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             }
 
+            // Smart Collections overlay
+            if appState.showSmartCollections {
+                overlayBackdrop {
+                    withAnimation(Constants.Animation.snappy) {
+                        appState.showSmartCollections = false
+                    }
+                }
+                SmartCollectionsView(
+                    onSelect: { collection in
+                        withAnimation(Constants.Animation.snappy) {
+                            appState.activeSmartCollection = collection
+                            appState.showSmartCollections = false
+                            appState.refreshItems()
+                        }
+                    },
+                    onDismiss: {
+                        withAnimation(Constants.Animation.snappy) {
+                            appState.showSmartCollections = false
+                        }
+                    }
+                )
+                .environmentObject(appState)
+                .transition(.scale(scale: 0.95).combined(with: .opacity))
+            }
+
+            // Favorites Panel overlay
+            if appState.showFavoritesPanel {
+                overlayBackdrop {
+                    withAnimation(Constants.Animation.snappy) {
+                        appState.showFavoritesPanel = false
+                    }
+                }
+                FavoritesPanelView(
+                    onDismiss: {
+                        withAnimation(Constants.Animation.snappy) {
+                            appState.showFavoritesPanel = false
+                        }
+                    }
+                )
+                .environmentObject(appState)
+                .transition(.scale(scale: 0.95).combined(with: .opacity))
+            }
+
             // Undo delete toast
             if appState.showUndoToast {
                 VStack {
@@ -194,6 +265,12 @@ struct PopoverContentView: View {
         .animation(Constants.Animation.snappy, value: appState.showTransformResult)
         .animation(Constants.Animation.snappy, value: appState.showOnboarding)
         .animation(Constants.Animation.snappy, value: appState.showUndoToast)
+        .animation(Constants.Animation.snappy, value: appState.showSmartCollections)
+        .animation(Constants.Animation.snappy, value: appState.showFavoritesPanel)
+        .animation(Constants.Animation.snappy, value: appState.activeSmartCollection?.id)
+        .onAppear {
+            appState.unseenCopyCount = 0
+        }
     }
 
     // MARK: - Overlay Backdrop
@@ -232,6 +309,36 @@ struct PopoverContentView: View {
             Spacer()
 
             HStack(spacing: 4) {
+                // Smart Collections
+                Button {
+                    withAnimation(Constants.Animation.snappy) {
+                        appState.showSmartCollections = true
+                    }
+                } label: {
+                    Image(systemName: "square.stack.3d.up.badge.automatic")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(appState.activeSmartCollection != nil ? Color.accentColor : Color.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Smart Collections")
+
+                // Favorites
+                Button {
+                    withAnimation(Constants.Animation.snappy) {
+                        appState.showFavoritesPanel = true
+                    }
+                } label: {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(.orange.opacity(0.6))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Favorites")
+
                 // Settings
                 SettingsLink {
                     Image(systemName: "gear")

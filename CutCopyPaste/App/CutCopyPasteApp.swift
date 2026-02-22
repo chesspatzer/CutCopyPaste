@@ -81,7 +81,7 @@ struct CutCopyPasteApp: App {
                 .preferredColorScheme(appearanceMode.colorScheme)
                 .background(WindowAppearanceSetter(appearance: appearanceMode.nsAppearance))
         } label: {
-            Image(systemName: "clipboard")
+            Image(systemName: appState.unseenCopyCount > 0 ? "clipboard.fill" : "clipboard")
                 .symbolRenderingMode(.hierarchical)
         }
         .menuBarExtraStyle(.window)

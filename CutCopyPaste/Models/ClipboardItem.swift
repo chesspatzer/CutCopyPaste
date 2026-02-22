@@ -41,6 +41,12 @@ final class ClipboardItem {
     // Semantic search embedding (NLEmbedding sentence vector)
     var embeddingVector: Data?
 
+    // Syntax highlighting — detected programming language
+    var detectedLanguage: String?
+
+    // Pin ordering for favorites panel
+    var pinnedOrder: Int = 0
+
     @Transient
     var preview: String {
         switch contentType {

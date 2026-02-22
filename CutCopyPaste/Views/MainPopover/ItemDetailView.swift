@@ -83,6 +83,34 @@ struct ItemDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
+                    // Detected language & syntax-highlighted code
+                    if let lang = item.detectedLanguage, let text = item.textContent {
+                        Rectangle()
+                            .fill(Color.primary.opacity(0.06))
+                            .frame(height: 0.5)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Source Code")
+                                    .font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Text(SyntaxHighlighter.displayName(for: lang))
+                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.blue.opacity(0.7))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Capsule().fill(Color.blue.opacity(0.08)))
+                            }
+                            SyntaxHighlightedText(
+                                text: text,
+                                language: lang,
+                                maxHeight: 200
+                            )
+                            .frame(maxHeight: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
                     // OCR text
                     if let ocrText = item.ocrText, !ocrText.isEmpty {
                         Rectangle()

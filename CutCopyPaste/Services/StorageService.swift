@@ -126,6 +126,14 @@ actor StorageService {
         try? modelContext.save()
     }
 
+    // MARK: - Pin Order
+
+    func updatePinnedOrder(_ itemID: UUID, order: Int) {
+        guard let item = fetchByID(itemID) else { return }
+        item.pinnedOrder = order
+        try? modelContext.save()
+    }
+
     // MARK: - Advanced Fetch
 
     func fetchItems(

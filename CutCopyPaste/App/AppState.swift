@@ -54,6 +54,19 @@ final class AppState: ObservableObject {
     // UI State — Onboarding
     @Published var showOnboarding: Bool = false
 
+    // UI State — Search Mode (Feature 3)
+    @Published var searchMode: SearchMode = .natural
+
+    // UI State — Smart Collections (Feature 4)
+    @Published var activeSmartCollection: SmartCollection? = nil
+    @Published var showSmartCollections: Bool = false
+
+    // UI State — Favorites Panel (Feature 8)
+    @Published var showFavoritesPanel: Bool = false
+
+    // UI State — Copy Count Badge (Feature 9)
+    @Published var unseenCopyCount: Int = 0
+
     private var cancellables = Set<AnyCancellable>()
 
     init(modelContainer: ModelContainer) {
@@ -81,13 +94,14 @@ final class AppState: ObservableObject {
         // Refresh UI when new item captured
         clipboardMonitor.onNewItem = { [weak self] in
             self?.refreshItems()
+            self?.unseenCopyCount += 1
         }
 
         // Observe search and category changes with debounce
         $searchText
             .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
-            .combineLatest($selectedCategory, $selectedWorkspace)
-            .sink { [weak self] _, _, _ in
+            .combineLatest($selectedCategory, $selectedWorkspace, $searchMode)
+            .sink { [weak self] _, _, _, _ in
                 self?.refreshItems()
             }
             .store(in: &cancellables)
@@ -129,21 +143,42 @@ final class AppState: ObservableObject {
             let filter = selectedCategory.itemType
             let pinned = selectedCategory == .pinned
 
-            let items: [ClipboardItem]
+            var items: [ClipboardItem]
             if !searchText.isEmpty {
-                let intent = naturalLanguageSearch.parseIntent(from: searchText)
-                items = await storageService.fetchItems(
-                    filterType: filter,
-                    searchIntent: intent,
-                    pinnedOnly: pinned,
-                    workspaceName: selectedWorkspace
-                )
+                if searchMode == .regex {
+                    // Regex search mode — fetch all then filter in-memory
+                    items = await storageService.fetchItems(
+                        filterType: filter,
+                        searchText: "",
+                        pinnedOnly: pinned
+                    )
+                    if let regex = try? NSRegularExpression(pattern: searchText, options: .caseInsensitive) {
+                        items = items.filter { item in
+                            guard let text = item.textContent else { return false }
+                            let range = NSRange(text.startIndex..., in: text)
+                            return regex.firstMatch(in: text, range: range) != nil
+                        }
+                    }
+                } else {
+                    let intent = naturalLanguageSearch.parseIntent(from: searchText)
+                    items = await storageService.fetchItems(
+                        filterType: filter,
+                        searchIntent: intent,
+                        pinnedOnly: pinned,
+                        workspaceName: selectedWorkspace
+                    )
+                }
             } else {
                 items = await storageService.fetchItems(
                     filterType: filter,
                     searchText: "",
                     pinnedOnly: pinned
                 )
+            }
+
+            // Apply smart collection filter if active
+            if let collection = await MainActor.run(body: { activeSmartCollection }) {
+                items = items.filter(collection.predicate)
             }
 
             await MainActor.run {
@@ -280,6 +315,55 @@ final class AppState: ObservableObject {
     func clearAll() {
         Task {
             await storageService.clearAll(keepPinned: true)
+            refreshItems()
+        }
+    }
+
+    // MARK: - Copy As Formats
+
+    func copyFormattedText(_ text: String, format: CopyFormat) {
+        let formatted: String
+        switch format {
+        case .plainText:
+            formatted = text
+        case .markdownCodeBlock:
+            let lang = ""
+            formatted = "```\(lang)\n\(text)\n```"
+        case .htmlPreBlock:
+            let escaped = text
+                .replacingOccurrences(of: "&", with: "&amp;")
+                .replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;")
+            formatted = "<pre><code>\(escaped)</code></pre>"
+        case .quotedText:
+            formatted = text.components(separatedBy: .newlines).map { "> \($0)" }.joined(separator: "\n")
+        case .escapedString:
+            formatted = text
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+                .replacingOccurrences(of: "\n", with: "\\n")
+                .replacingOccurrences(of: "\t", with: "\\t")
+        case .singleLine:
+            formatted = text.components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+        }
+        copyText(formatted)
+    }
+
+    // MARK: - Pin Reorder
+
+    func reorderPinnedItems(from source: IndexSet, to destination: Int) {
+        var pinned = clipboardItems.filter { $0.isPinned }.sorted { $0.pinnedOrder < $1.pinnedOrder }
+        pinned.move(fromOffsets: source, toOffset: destination)
+        for (index, item) in pinned.enumerated() {
+            item.pinnedOrder = index
+        }
+        Task {
+            for item in pinned {
+                await storageService.updatePinnedOrder(item.id, order: item.pinnedOrder)
+            }
             refreshItems()
         }
     }

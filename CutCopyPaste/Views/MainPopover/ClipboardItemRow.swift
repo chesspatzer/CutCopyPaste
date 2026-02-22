@@ -33,7 +33,17 @@ struct ClipboardItemRow: View {
     private var isCompact: Bool { displayMode == .compact }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        HStack(spacing: 0) {
+            // Drag handle (visible on hover)
+            if isHovered {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.quaternary)
+                    .frame(width: 12)
+                    .transition(.opacity)
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
             // Top bar: source app + time + pin
             topBar
                 .padding(.horizontal, isCompact ? 8 : 12)
@@ -62,6 +72,7 @@ struct ClipboardItemRow: View {
                 .padding(.top, isCompact ? 3 : 8)
                 .padding(.bottom, isCompact ? 6 : 10)
         }
+        } // end HStack
         .background {
             RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous)
                 .fill(cardBackground)
@@ -155,6 +166,16 @@ struct ClipboardItemRow: View {
             }
 
             Spacer()
+
+            // Language badge
+            if let lang = item.detectedLanguage {
+                Text(SyntaxHighlighter.displayName(for: lang))
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.blue.opacity(0.7))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(Color.blue.opacity(0.08)))
+            }
 
             if showTimestamps {
                 Text(item.createdAt.relativeFormatted())
@@ -357,23 +378,35 @@ struct ClipboardItemRow: View {
     // MARK: - Text Preview
 
     private var textPreview: some View {
-        HStack(spacing: 6) {
-            if let text = item.textContent, !item.isMasked {
-                if let color = parseHexColor(text.trimmingCharacters(in: .whitespacesAndNewlines)) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(color)
-                        .frame(width: isCompact ? 14 : 16, height: isCompact ? 14 : 16)
-                        .overlay {
+        VStack(alignment: .leading, spacing: 0) {
+            if let lang = item.detectedLanguage, let text = item.textContent, !item.isMasked {
+                // Syntax-highlighted code preview
+                CodePreviewView(
+                    text: text,
+                    language: lang,
+                    lineLimit: isCompact ? 3 : 6,
+                    isCompact: isCompact
+                )
+            } else {
+                HStack(spacing: 6) {
+                    if let text = item.textContent, !item.isMasked {
+                        if let color = parseHexColor(text.trimmingCharacters(in: .whitespacesAndNewlines)) {
                             RoundedRectangle(cornerRadius: 4)
-                                .strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
+                                .fill(color)
+                                .frame(width: isCompact ? 14 : 16, height: isCompact ? 14 : 16)
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5)
+                                }
                         }
+                    }
+                    Text(displayText)
+                        .font(isCompact ? .system(size: 12, weight: .regular) : Constants.Typography.body)
+                        .lineLimit(isCompact ? 2 : 4)
+                        .truncationMode(.tail)
+                        .foregroundStyle(.primary.opacity(0.9))
                 }
             }
-            Text(displayText)
-                .font(isCompact ? .system(size: 12, weight: .regular) : Constants.Typography.body)
-                .lineLimit(isCompact ? 2 : 4)
-                .truncationMode(.tail)
-                .foregroundStyle(.primary.opacity(0.9))
         }
     }
 
@@ -533,6 +566,45 @@ struct ClipboardItemRow: View {
                 Label(appState.mergeSelection.contains(item.id) ? "Deselect for Merge" : "Select for Merge",
                       systemImage: "arrow.triangle.merge")
             }
+        }
+
+        // Copy as... submenu
+        if let text = item.textContent {
+            Menu("Copy as...") {
+                ForEach(CopyFormat.allCases, id: \.rawValue) { format in
+                    Button {
+                        appState.copyFormattedText(text, format: format)
+                    } label: {
+                        Label(format.displayName, systemImage: format.systemImage)
+                    }
+                }
+            }
+
+            Menu("Share") {
+                Button {
+                    appState.copyText(ShareService.shared.formatForSlack(text, language: item.detectedLanguage))
+                } label: {
+                    Label("Copy for Slack", systemImage: "bubble.left")
+                }
+                Button {
+                    appState.copyText(ShareService.shared.formatForDiscord(text, language: item.detectedLanguage))
+                } label: {
+                    Label("Copy for Discord", systemImage: "bubble.left.fill")
+                }
+                if item.contentType == .link {
+                    Button {
+                        appState.copyText(ShareService.shared.formatAsMarkdownLink(text))
+                    } label: {
+                        Label("As Markdown Link", systemImage: "link.badge.plus")
+                    }
+                }
+            }
+        }
+
+        Button {
+            ShareService.shared.exportToFile(item)
+        } label: {
+            Label("Export to File...", systemImage: "square.and.arrow.up")
         }
 
         Divider()
