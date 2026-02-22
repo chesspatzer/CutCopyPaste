@@ -14,6 +14,11 @@ struct ClipboardItemRow: View {
     @EnvironmentObject var appState: AppState
     @State private var isHovered = false
     @State private var justCopied = false
+    @State private var compareHovered = false
+    @State private var ocrHovered = false
+
+    // Hover preview frame tracking
+    @State private var cardFrameInPopover: CGRect = .zero
 
     // Cached image — computed once and stored in @State
     @State private var cachedImage: NSImage?
@@ -41,6 +46,60 @@ struct ClipboardItemRow: View {
     }
 
     var body: some View {
+        cardContent
+            .background {
+                GeometryReader { geo in
+                    Color.clear
+                        .onChange(of: geo.frame(in: .named("popover"))) { _, newFrame in
+                            cardFrameInPopover = newFrame
+                        }
+                        .onAppear {
+                            cardFrameInPopover = geo.frame(in: .named("popover"))
+                        }
+                }
+            }
+            .onHover { hovering in
+                withAnimation(Constants.Animation.quick) {
+                    isHovered = hovering
+                }
+                if hovering {
+                    appState.requestHoverPreview(for: item, cardFrame: cardFrameInPopover)
+                } else {
+                    appState.cancelHoverPreview(fromCard: true)
+                }
+            }
+            .onTapGesture(count: 2) {
+                appState.dismissHoverPreview()
+                onAutoPaste()
+            }
+            .draggable(TransferableClipboardData(from: item)) {
+                HStack(spacing: 6) {
+                    Image(systemName: item.contentType.systemImage)
+                        .font(Constants.Typography.footnote)
+                        .foregroundStyle(.secondary)
+                    Text(item.preview)
+                        .font(Constants.Typography.caption)
+                        .lineLimit(1)
+                        .frame(maxWidth: 200)
+                }
+                .padding(8)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .contextMenu {
+                contextMenuItems
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityDescription)
+            .accessibilityHint("Double-click to paste. Right-click for more options.")
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .onAppear {
+                if item.contentType == .image {
+                    loadImageIfNeeded()
+                }
+            }
+    }
+
+    private var cardContent: some View {
         HStack(spacing: 0) {
             // Drag handle (visible on hover)
             if isHovered {
@@ -52,35 +111,31 @@ struct ClipboardItemRow: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-            // Top bar: source app + time + pin
-            topBar
-                .padding(.horizontal, isCompact ? 8 : 12)
-                .padding(.top, isCompact ? 6 : 10)
-                .padding(.bottom, isCompact ? 3 : 6)
+                topBar
+                    .padding(.horizontal, isCompact ? 8 : 12)
+                    .padding(.top, isCompact ? 6 : 10)
+                    .padding(.bottom, isCompact ? 3 : 6)
 
-            // Content preview
-            contentPreview
-                .padding(.horizontal, isCompact ? 8 : 12)
+                contentPreview
+                    .padding(.horizontal, isCompact ? 8 : 12)
 
-            // Summary for long text (hidden in compact)
-            if !isCompact, let summary = item.summary, !item.isMasked {
-                Text(summary)
-                    .font(Constants.Typography.summary)
-                    .foregroundStyle(.secondary.opacity(0.8))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .italic()
-                    .padding(.horizontal, 12)
-                    .padding(.top, 4)
+                if !isCompact, let summary = item.summary, !item.isMasked {
+                    Text(summary)
+                        .font(Constants.Typography.summary)
+                        .foregroundStyle(.secondary.opacity(0.8))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .italic()
+                        .padding(.horizontal, 12)
+                        .padding(.top, 4)
+                }
+
+                bottomBar
+                    .padding(.horizontal, isCompact ? 8 : 12)
+                    .padding(.top, isCompact ? 3 : 8)
+                    .padding(.bottom, isCompact ? 6 : 10)
             }
-
-            // Bottom bar: type label + char count + hover actions
-            bottomBar
-                .padding(.horizontal, isCompact ? 8 : 12)
-                .padding(.top, isCompact ? 3 : 8)
-                .padding(.bottom, isCompact ? 6 : 10)
         }
-        } // end HStack
         .background {
             RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous)
                 .fill(cardBackground)
@@ -103,40 +158,6 @@ struct ClipboardItemRow: View {
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: Constants.UI.cornerRadius, style: .continuous))
-        .onHover { hovering in
-            withAnimation(Constants.Animation.quick) {
-                isHovered = hovering
-            }
-        }
-        .animation(Constants.Animation.quick, value: isHovered)
-        .onTapGesture(count: 2) {
-            onAutoPaste()
-        }
-        .draggable(TransferableClipboardData(from: item)) {
-            HStack(spacing: 6) {
-                Image(systemName: item.contentType.systemImage)
-                    .font(Constants.Typography.footnote)
-                    .foregroundStyle(.secondary)
-                Text(item.preview)
-                    .font(Constants.Typography.caption)
-                    .lineLimit(1)
-                    .frame(maxWidth: 200)
-            }
-            .padding(8)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
-        }
-        .contextMenu {
-            contextMenuItems
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint("Double-click to paste. Right-click for more options.")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .onAppear {
-            if item.contentType == .image {
-                loadImageIfNeeded()
-            }
-        }
     }
 
     private var accessibilityDescription: String {
@@ -454,14 +475,37 @@ struct ClipboardItemRow: View {
                         .font(Constants.Typography.footnote)
                         .foregroundStyle(.tertiary)
                 }
+            }
 
-                if item.ocrText != nil {
+            if item.ocrText != nil {
+                if !isCompact {
                     Text("\u{00B7}")
                         .foregroundStyle(.tertiary)
                         .font(Constants.Typography.footnote)
-                    Text("OCR")
-                        .font(Constants.Typography.footnote)
-                        .foregroundStyle(.tertiary)
+                }
+                Button {
+                    withAnimation(Constants.Animation.snappy) {
+                        appState.ocrResultItem = item
+                    }
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "text.viewfinder")
+                            .font(.system(size: 9))
+                        Text("OCR")
+                            .font(Constants.Typography.footnote)
+                    }
+                    .foregroundStyle(ocrHovered ? .blue : .secondary)
+                }
+                .buttonStyle(.plain)
+                .onHover { hovering in
+                    withAnimation(Constants.Animation.quick) {
+                        ocrHovered = hovering
+                    }
+                    if hovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
                 }
             }
 
@@ -475,14 +519,20 @@ struct ClipboardItemRow: View {
                     } label: {
                         Image(systemName: isSelectedForCompare ? "arrow.left.arrow.right.circle.fill" : "arrow.left.arrow.right")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(isSelectedForCompare ? .blue : .secondary)
+                            .foregroundStyle(isSelectedForCompare ? .blue : (compareHovered ? .blue : .secondary))
                             .frame(width: 24, height: 24)
                             .background {
                                 Circle()
-                                    .fill(isSelectedForCompare ? Color.blue.opacity(0.1) : Color.primary.opacity(0.06))
+                                    .fill(isSelectedForCompare ? Color.blue.opacity(0.1) : (compareHovered ? Color.blue.opacity(0.08) : Color.primary.opacity(0.06)))
                             }
+                            .scaleEffect(compareHovered && !isSelectedForCompare ? 1.08 : 1.0)
                     }
                     .buttonStyle(.plain)
+                    .onHover { hovering in
+                        withAnimation(Constants.Animation.quick) {
+                            compareHovered = hovering
+                        }
+                    }
                     .help(isSelectedForCompare ? "Deselect for Compare" : "Compare")
 
                     if item.textContent != nil || item.contentType == .image {
@@ -538,6 +588,7 @@ struct ClipboardItemRow: View {
     // MARK: - Actions
 
     private func performCopy() {
+        appState.dismissHoverPreview()
         onCopy()
         withAnimation(Constants.Animation.bouncy) {
             justCopied = true

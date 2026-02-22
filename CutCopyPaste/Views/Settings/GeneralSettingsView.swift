@@ -21,13 +21,16 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(.blue)
                     }
                     Spacer()
+                    Text("\(prefs.maxHistoryCount) items")
+                        .foregroundStyle(.secondary)
                     Stepper(
-                        "\(prefs.maxHistoryCount) items",
+                        "",
                         value: $prefs.maxHistoryCount,
                         in: 50...5000,
                         step: 50
                     )
                     .labelsHidden()
+                    .fixedSize()
                 }
 
                 LabeledContent {

@@ -72,6 +72,13 @@ enum Constants {
         static let footer = Font.system(size: 10, weight: .medium, design: .rounded)
     }
 
+    enum HoverPreview {
+        static let showDelay: TimeInterval = 0.5
+        static let dismissDelay: TimeInterval = 0.15
+        static let maxHeight: CGFloat = 500
+        static let panelWidth: CGFloat = 380
+    }
+
     enum Animation {
         static let snappy: SwiftUI.Animation = .snappy(duration: 0.15, extraBounce: 0.02)
         static let quick: SwiftUI.Animation = .spring(duration: 0.12, bounce: 0.08)

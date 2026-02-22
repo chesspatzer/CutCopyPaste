@@ -1,5 +1,20 @@
 import SwiftUI
 
+/// Captures the hosting NSWindow reference on appear.
+private struct WindowCapture: NSViewRepresentable {
+    let onWindow: (NSWindow) -> Void
+
+    func makeNSView(context: Context) -> NSView { NSView() }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            if let window = nsView.window {
+                onWindow(window)
+            }
+        }
+    }
+}
+
 struct PopoverContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var headerHovered = false
@@ -99,6 +114,9 @@ struct PopoverContentView: View {
                 footer
             }
             .background(Color(nsColor: .windowBackgroundColor))
+            .background(WindowCapture { window in
+                appState.popoverNSWindow = window
+            })
 
             // Overlay modals (replaces .sheet() to avoid MenuBarExtra dismiss bug)
             if appState.showDiffView {
@@ -242,6 +260,7 @@ struct PopoverContentView: View {
                 }
             }
         }
+        .coordinateSpace(name: "popover")
         .animation(Constants.Animation.snappy, value: appState.showDiffView)
         .animation(Constants.Animation.snappy, value: appState.showMergeView)
         .animation(Constants.Animation.snappy, value: appState.showTransformResult)
@@ -251,6 +270,9 @@ struct PopoverContentView: View {
         .animation(Constants.Animation.snappy, value: appState.activeSmartCollection?.id)
         .onAppear {
             appState.unseenCopyCount = 0
+        }
+        .onDisappear {
+            appState.dismissHoverPreview()
         }
     }
 

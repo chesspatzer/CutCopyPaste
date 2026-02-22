@@ -1,6 +1,8 @@
 import SwiftUI
 import AppKit
 
+/// Renders rich markdown using NSTextView via NSViewRepresentable.
+/// Used only in detail/full views — card previews use the lightweight MarkdownPreviewView instead.
 struct RenderedMarkdownView: NSViewRepresentable {
     let text: String
     let maxHeight: CGFloat
@@ -56,10 +58,11 @@ struct RenderedMarkdownView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         let attributed = MarkdownRenderer.shared.render(text, isDark: isDark, fontSize: fontSize)
         textView.textStorage?.setAttributedString(attributed)
-        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
     }
 }
 
+/// Lightweight pure-SwiftUI markdown preview for clipboard item cards.
+/// Uses SwiftUI Text(AttributedString) instead of NSViewRepresentable for fast scroll performance.
 struct MarkdownPreviewView: View {
     let text: String
     let lineLimit: Int
@@ -72,14 +75,24 @@ struct MarkdownPreviewView: View {
     }
 
     var body: some View {
+        let isDark = colorScheme == .dark
+        let nsAttr = MarkdownRenderer.shared.render(previewText, isDark: isDark, fontSize: isCompact ? 11 : 12)
+        let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
+
         VStack(alignment: .leading, spacing: 0) {
-            RenderedMarkdownView(
-                text: previewText,
-                maxHeight: previewHeight,
-                fontSize: isCompact ? 11 : 12
-            )
-            .frame(height: previewHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            if let swiftAttr {
+                Text(swiftAttr)
+                    .lineLimit(lineLimit)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
+            } else {
+                Text(previewText)
+                    .font(.system(size: isCompact ? 11 : 12))
+                    .lineLimit(lineLimit)
+                    .truncationMode(.tail)
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
+            }
         }
         .padding(6)
         .background {

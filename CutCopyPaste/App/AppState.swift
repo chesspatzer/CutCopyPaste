@@ -64,6 +64,18 @@ final class AppState: ObservableObject {
     // UI State — Copy Count Badge (Feature 9)
     @Published var unseenCopyCount: Int = 0
 
+    // UI State — Hover Preview
+    @Published var hoverPreviewItem: ClipboardItem? = nil
+    @Published var hoverPreviewCardFrame: CGRect = .zero
+    private var hoverShowWorkItem: DispatchWorkItem?
+    private var hoverDismissWorkItem: DispatchWorkItem?
+    private var isHoverCardHovered = false
+    private var isHoverPanelHovered = false
+    let hoverPreviewWindow = HoverPreviewWindowController()
+
+    /// Reference to the MenuBarExtra popover window, captured via NSViewRepresentable.
+    weak var popoverNSWindow: NSWindow?
+
     private var cancellables = Set<AnyCancellable>()
 
     init(modelContainer: ModelContainer) {
@@ -451,5 +463,112 @@ final class AppState: ObservableObject {
                 copyText(resolved)
             }
         }
+    }
+
+    // MARK: - Hover Preview
+
+    private var isAnyModalOpen: Bool {
+        detailItem != nil || showDiffView || showMergeView
+        || showTransformResult || ocrResultItem != nil
+        || showOnboarding || showSmartCollections
+    }
+
+    /// Find the MenuBarExtra popover window.
+    private var popoverWindow: NSWindow? {
+        if let w = popoverNSWindow, w.isVisible { return w }
+        return NSApp.windows.first(where: {
+            $0 is NSPanel
+            && ($0.className.contains("StatusBarWindow") || $0.level == .statusBar)
+            && $0.isVisible
+        })
+    }
+
+    func requestHoverPreview(for item: ClipboardItem, cardFrame: CGRect) {
+        guard !isAnyModalOpen else { return }
+
+        isHoverCardHovered = true
+        hoverDismissWorkItem?.cancel()
+        hoverDismissWorkItem = nil
+
+        // Already showing this item — just update frame
+        if hoverPreviewItem?.id == item.id {
+            hoverPreviewCardFrame = cardFrame
+            if let popover = popoverWindow {
+                hoverPreviewWindow.show(
+                    item: item,
+                    cardFrame: cardFrame,
+                    popoverWindow: popover,
+                    onHoverChange: { [weak self] hovering in
+                        self?.markHoverPanelHovered(hovering)
+                    }
+                )
+            }
+            return
+        }
+
+        // Cancel pending show for a different item
+        hoverShowWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.hoverPreviewItem = item
+            self.hoverPreviewCardFrame = cardFrame
+            if let popover = self.popoverWindow {
+                self.hoverPreviewWindow.show(
+                    item: item,
+                    cardFrame: cardFrame,
+                    popoverWindow: popover,
+                    onHoverChange: { [weak self] hovering in
+                        self?.markHoverPanelHovered(hovering)
+                    }
+                )
+            }
+        }
+        hoverShowWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.HoverPreview.showDelay, execute: workItem)
+    }
+
+    func cancelHoverPreview(fromCard: Bool) {
+        if fromCard {
+            isHoverCardHovered = false
+        } else {
+            isHoverPanelHovered = false
+        }
+
+        hoverShowWorkItem?.cancel()
+        hoverShowWorkItem = nil
+
+        guard !isHoverCardHovered && !isHoverPanelHovered else { return }
+
+        hoverDismissWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard !self.isHoverCardHovered && !self.isHoverPanelHovered else { return }
+            self.hoverPreviewItem = nil
+            self.hoverPreviewWindow.hide()
+        }
+        hoverDismissWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.HoverPreview.dismissDelay, execute: workItem)
+    }
+
+    func markHoverPanelHovered(_ hovered: Bool) {
+        if hovered {
+            isHoverPanelHovered = true
+            hoverDismissWorkItem?.cancel()
+            hoverDismissWorkItem = nil
+        } else {
+            cancelHoverPreview(fromCard: false)
+        }
+    }
+
+    func dismissHoverPreview() {
+        hoverShowWorkItem?.cancel()
+        hoverShowWorkItem = nil
+        hoverDismissWorkItem?.cancel()
+        hoverDismissWorkItem = nil
+        isHoverCardHovered = false
+        isHoverPanelHovered = false
+        hoverPreviewItem = nil
+        hoverPreviewWindow.hide()
     }
 }

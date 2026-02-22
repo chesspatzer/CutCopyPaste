@@ -3,6 +3,7 @@ import SwiftUI
 struct ActionsMenu: View {
     let item: ClipboardItem
     @EnvironmentObject var appState: AppState
+    @State private var isHovered = false
 
     var body: some View {
         Menu {
@@ -111,16 +112,22 @@ struct ActionsMenu: View {
         } label: {
             Image(systemName: "wand.and.stars")
                 .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isHovered ? .purple : .secondary)
                 .frame(width: 24, height: 24)
                 .background {
                     Circle()
-                        .fill(Color.primary.opacity(0.06))
+                        .fill(isHovered ? Color.purple.opacity(0.08) : Color.primary.opacity(0.06))
                 }
+                .scaleEffect(isHovered ? 1.08 : 1.0)
         }
         .buttonStyle(.plain)
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
+        .onHover { hovering in
+            withAnimation(Constants.Animation.quick) {
+                isHovered = hovering
+            }
+        }
         .help("Transforms & Actions")
     }
 }

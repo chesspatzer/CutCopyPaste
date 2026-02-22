@@ -12,9 +12,6 @@ struct ClipboardListView: View {
 
     @AppStorage("timeGroupedHistory") private var timeGroupedHistory: Bool = true
     @State private var selectedIndex: Int? = nil
-    @State private var appearedIDs: Set<UUID> = []
-    @State private var appearCounter: Int = 0
-    @State private var initialLoadComplete: Bool = false
 
     private var selectedItemID: UUID? {
         guard let idx = selectedIndex, idx < items.count else { return nil }
@@ -51,8 +48,6 @@ struct ClipboardListView: View {
             }
             .onChange(of: items.count) {
                 selectedIndex = nil
-                appearCounter = 0
-                initialLoadComplete = false
             }
         }
     }
@@ -104,7 +99,6 @@ struct ClipboardListView: View {
 
     @ViewBuilder
     private func itemRow(_ item: ClipboardItem) -> some View {
-        let alreadyAppeared = appearedIDs.contains(item.id) || initialLoadComplete
         ClipboardItemRow(
             item: item,
             displayMode: displayMode,
@@ -121,25 +115,6 @@ struct ClipboardListView: View {
             }
         )
         .id(item.id)
-        .opacity(alreadyAppeared ? 1 : 0)
-        .offset(y: alreadyAppeared ? 0 : 6)
-        .onAppear {
-            if !appearedIDs.contains(item.id) && !initialLoadComplete {
-                let order = appearCounter
-                appearCounter += 1
-                // Only animate the first visible batch (roughly 8 items)
-                if order < 8 {
-                    let delay = Double(order) * Constants.Animation.staggerDelay
-                    withAnimation(Constants.Animation.smooth.delay(delay)) {
-                        appearedIDs.insert(item.id)
-                    }
-                } else {
-                    // Skip animation for items beyond the initial batch
-                    appearedIDs.insert(item.id)
-                    initialLoadComplete = true
-                }
-            }
-        }
     }
 
     private func moveSelection(by offset: Int, proxy: ScrollViewProxy) {

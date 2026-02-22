@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 
 /// Renders syntax-highlighted code using NSTextView via NSViewRepresentable.
+/// Used only in detail/full views — card previews use the lightweight CodePreviewView instead.
 struct SyntaxHighlightedText: NSViewRepresentable {
     let text: String
     let language: String
@@ -50,11 +51,11 @@ struct SyntaxHighlightedText: NSViewRepresentable {
         guard let textView = scrollView.documentView as? NSTextView else { return }
         let attributed = SyntaxHighlighter.shared.highlight(text, language: language, isDark: isDark)
         textView.textStorage?.setAttributedString(attributed)
-        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
     }
 }
 
-/// A compact code preview with syntax highlighting, suitable for clipboard item rows.
+/// Lightweight pure-SwiftUI code preview for clipboard item cards.
+/// Uses SwiftUI Text(AttributedString) instead of NSViewRepresentable for fast scroll performance.
 struct CodePreviewView: View {
     let text: String
     let language: String
@@ -68,14 +69,24 @@ struct CodePreviewView: View {
     }
 
     var body: some View {
+        let isDark = colorScheme == .dark
+        let nsAttr = SyntaxHighlighter.shared.highlight(previewText, language: language, isDark: isDark)
+        let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
+
         VStack(alignment: .leading, spacing: 0) {
-            SyntaxHighlightedText(
-                text: previewText,
-                language: language,
-                maxHeight: previewHeight
-            )
-            .frame(height: previewHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            if let swiftAttr {
+                Text(swiftAttr)
+                    .lineLimit(lineLimit)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
+            } else {
+                Text(previewText)
+                    .font(.system(size: 12, design: .monospaced))
+                    .lineLimit(lineLimit)
+                    .truncationMode(.tail)
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
+            }
         }
         .padding(6)
         .background {

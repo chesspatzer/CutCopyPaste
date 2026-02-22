@@ -5,6 +5,7 @@ struct CopyButton: View {
 
     @State private var showCheckmark = false
     @State private var isPressed = false
+    @State private var isHovered = false
 
     var body: some View {
         Button {
@@ -26,16 +27,21 @@ struct CopyButton: View {
         } label: {
             Image(systemName: showCheckmark ? "checkmark.circle.fill" : "doc.on.doc")
                 .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundStyle(showCheckmark ? .green : .secondary)
+                .foregroundStyle(showCheckmark ? .green : (isHovered ? .blue : .secondary))
                 .contentTransition(.symbolEffect(.replace.downUp))
                 .frame(width: 26, height: 26)
                 .background {
                     Circle()
-                        .fill(showCheckmark ? Color.green.opacity(0.1) : Color.primary.opacity(0.06))
+                        .fill(showCheckmark ? Color.green.opacity(0.1) : (isHovered ? Color.blue.opacity(0.08) : Color.primary.opacity(0.06)))
                 }
-                .scaleEffect(isPressed ? 0.85 : 1.0)
+                .scaleEffect(isPressed ? 0.85 : (isHovered ? 1.08 : 1.0))
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(Constants.Animation.quick) {
+                isHovered = hovering
+            }
+        }
         .help("Copy to clipboard")
         .accessibilityLabel(showCheckmark ? "Copied" : "Copy to clipboard")
     }

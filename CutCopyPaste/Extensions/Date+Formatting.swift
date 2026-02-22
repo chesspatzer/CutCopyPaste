@@ -1,10 +1,16 @@
 import Foundation
 
 extension Date {
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
     /// Returns a human-readable relative timestamp like "Just now", "2m ago", "Yesterday".
     func relativeFormatted() -> String {
-        let now = Date()
-        let interval = now.timeIntervalSince(self)
+        let interval = Date.now.timeIntervalSince(self)
 
         if interval < 60 {
             return "Just now"
@@ -20,10 +26,7 @@ extension Date {
             let days = Int(interval / 86400)
             return "\(days)d ago"
         } else {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-            return formatter.string(from: self)
+            return Self.mediumDateFormatter.string(from: self)
         }
     }
 }
