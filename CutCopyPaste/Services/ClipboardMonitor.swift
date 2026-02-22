@@ -1,4 +1,5 @@
 import AppKit
+import AppKit.NSSound
 import Combine
 import os
 
@@ -141,6 +142,12 @@ final class ClipboardMonitor: ObservableObject {
                         contentType: item.contentType
                     )
                 }
+
+                // Play capture sound
+                if UserPreferences.shared.playSoundOnCopy {
+                    NSSound(named: .init("Tink"))?.play()
+                }
+
                 self.onNewItem?()
             }
         }

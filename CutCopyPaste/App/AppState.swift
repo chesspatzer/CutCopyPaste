@@ -47,6 +47,13 @@ final class AppState: ObservableObject {
     @Published var detailItem: ClipboardItem? = nil
     @Published var ocrResultItem: ClipboardItem? = nil
 
+    // UI State — Undo delete
+    @Published var lastDeletedItem: ClipboardItem? = nil
+    @Published var showUndoToast: Bool = false
+
+    // UI State — Onboarding
+    @Published var showOnboarding: Bool = false
+
     private var cancellables = Set<AnyCancellable>()
 
     init(modelContainer: ModelContainer) {
@@ -67,6 +74,9 @@ final class AppState: ObservableObject {
 
         // Start monitoring clipboard
         clipboardMonitor.startMonitoring()
+
+        // Register global hotkey
+        shortcutManager.register()
 
         // Refresh UI when new item captured
         clipboardMonitor.onNewItem = { [weak self] in
@@ -94,6 +104,11 @@ final class AppState: ObservableObject {
             }
             await refreshSnippets()
             await storageService.backfillEmbeddings()
+        }
+
+        // Show onboarding on first launch
+        if !preferences.hasCompletedOnboarding {
+            showOnboarding = true
         }
     }
 
@@ -127,7 +142,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    func copyToClipboard(_ item: ClipboardItem) {
+    func copyToClipboard(_ item: ClipboardItem, autoPaste: Bool = false) {
         // Temporarily stop monitoring to avoid re-capturing what we just pasted
         clipboardMonitor.stopMonitoring()
 
@@ -163,10 +178,40 @@ final class AppState: ObservableObject {
             await storageService.touchItem(item.id)
         }
 
+        if autoPaste {
+            // Close the popover, then simulate Cmd+V in the frontmost app
+            dismissPopover()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Self.simulatePaste()
+            }
+        }
+
         // Resume monitoring after a brief delay to skip our own paste
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             self?.clipboardMonitor.startMonitoring()
         }
+    }
+
+    /// Close the MenuBarExtra panel
+    private func dismissPopover() {
+        for window in NSApp.windows where window is NSPanel {
+            if window.isVisible && (window.className.contains("StatusBarWindow") || window.level == .statusBar) {
+                window.orderOut(nil)
+                break
+            }
+        }
+    }
+
+    /// Simulate Cmd+V key press to paste into the frontmost application
+    private static func simulatePaste() {
+        let source = CGEventSource(stateID: .hidSystemState)
+        // Key code 9 = V
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
+        keyDown?.flags = .maskCommand
+        keyUp?.flags = .maskCommand
+        keyDown?.post(tap: .cghidEventTap)
+        keyUp?.post(tap: .cghidEventTap)
     }
 
     func copyText(_ text: String) {
@@ -187,9 +232,35 @@ final class AppState: ObservableObject {
     }
 
     func deleteItem(_ item: ClipboardItem) {
+        lastDeletedItem = item
+        showUndoToast = true
+
+        // Auto-dismiss undo toast after 4 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.lastDeletedItem?.id == item.id else { return }
+            withAnimation(Constants.Animation.smooth) {
+                self.showUndoToast = false
+                self.lastDeletedItem = nil
+            }
+        }
+
         Task {
             await storageService.delete(item.id)
             refreshItems()
+        }
+    }
+
+    func undoDelete() {
+        guard let item = lastDeletedItem else { return }
+        Task {
+            await storageService.save(item)
+            refreshItems()
+            await MainActor.run {
+                withAnimation(Constants.Animation.snappy) {
+                    showUndoToast = false
+                    lastDeletedItem = nil
+                }
+            }
         }
     }
 

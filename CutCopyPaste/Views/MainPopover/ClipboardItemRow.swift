@@ -7,6 +7,7 @@ struct ClipboardItemRow: View {
     let showSourceApp: Bool
     let isSelected: Bool
     let onCopy: () -> Void
+    let onAutoPaste: () -> Void
     let onPin: () -> Void
     let onDelete: () -> Void
 
@@ -88,7 +89,7 @@ struct ClipboardItemRow: View {
         }
         .animation(Constants.Animation.quick, value: isHovered)
         .onTapGesture(count: 2) {
-            performCopy()
+            onAutoPaste()
         }
         .draggable(TransferableClipboardData(from: item)) {
             HStack(spacing: 6) {

@@ -4,6 +4,7 @@ import Carbon.HIToolbox
 struct ShortcutsSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var isRecording = false
+    @State private var eventMonitor: Any?
 
     var body: some View {
         Form {
@@ -12,7 +13,11 @@ struct ShortcutsSettingsView: View {
                     Label("Toggle panel", systemImage: "rectangle.and.hand.point.up.left")
                     Spacer()
                     Button {
-                        isRecording.toggle()
+                        if isRecording {
+                            stopRecording()
+                        } else {
+                            startRecording()
+                        }
                     } label: {
                         if isRecording {
                             Text("Press keys...")
@@ -79,7 +84,59 @@ struct ShortcutsSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onDisappear {
+            stopRecording()
+        }
     }
+
+    // MARK: - Recording
+
+    private func startRecording() {
+        // Temporarily unregister the global hotkey so it doesn't interfere
+        appState.shortcutManager.unregister()
+        isRecording = true
+
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
+            let keyCode = Int(event.keyCode)
+            let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
+
+            // Require at least one modifier key
+            guard !flags.isEmpty else {
+                // Escape cancels recording
+                if keyCode == 53 {
+                    stopRecording()
+                }
+                return nil
+            }
+
+            // Convert NSEvent modifier flags to CGEventFlags
+            var cgFlags: UInt64 = 0
+            if flags.contains(.command)  { cgFlags |= CGEventFlags.maskCommand.rawValue }
+            if flags.contains(.shift)    { cgFlags |= CGEventFlags.maskShift.rawValue }
+            if flags.contains(.option)   { cgFlags |= CGEventFlags.maskAlternate.rawValue }
+            if flags.contains(.control)  { cgFlags |= CGEventFlags.maskControl.rawValue }
+
+            // Save the new shortcut
+            let prefs = UserPreferences.shared
+            prefs.globalToggleKeyCode = keyCode
+            prefs.globalToggleModifiers = Int(cgFlags)
+
+            stopRecording()
+            return nil // Consume the event
+        }
+    }
+
+    private func stopRecording() {
+        isRecording = false
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        // Re-register the global hotkey with the (possibly new) shortcut
+        appState.shortcutManager.register()
+    }
+
+    // MARK: - Display
 
     private var currentShortcutDisplay: [String] {
         let prefs = UserPreferences.shared

@@ -105,5 +105,9 @@ final class UserPreferences: ObservableObject {
     @AppStorage("launchAtLogin") var launchAtLogin: Bool = false
     @AppStorage("playSoundOnCopy") var playSoundOnCopy: Bool = false
 
+    // MARK: - Onboarding
+
+    @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
+
     private init() {}
 }

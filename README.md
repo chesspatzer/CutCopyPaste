@@ -122,6 +122,20 @@ Context-aware actions appear on hover based on content type:
 - **UUIDs**: detect and regenerate
 - **Timestamps**: convert between epoch, ISO 8601, and human-readable
 
+### Paste & Auto-Type
+- **Double-click** or press **Return** to copy an item and auto-paste it into the frontmost app
+- Popover closes automatically, Cmd+V is simulated — seamless one-action paste
+- Copy button (single click) still puts content on the clipboard without pasting
+
+### Onboarding
+- First-run welcome flow introduces key features and shortcuts
+- Prompts for Accessibility permission grant (required for global hotkey)
+- Privacy reassurance — "100% offline" highlighted upfront
+
+### Undo Delete
+- Deleting an item shows a floating toast with an **Undo** button
+- Auto-dismisses after 4 seconds — re-saves the item if you tap Undo in time
+
 ---
 
 ## UI
@@ -133,12 +147,14 @@ Clean, card-based design:
 - **Rich content previews** — text at 13pt with 3-line limit, full-width image thumbnails, color swatches for hex codes
 - **Flat pill tab bar** — accent-filled capsule for the active filter, clean flat pills for the rest
 - **Larger search bar** — prominent placement with 13pt font, "Search your clipboard..." placeholder
+- **Privacy badge** — green "Offline" badge in the header reinforces data stays local
 - **Minimal header** — clean app title with just settings and overflow menu, no clutter
 - **Hover action bar** — compare, transforms, pin, delete, and copy buttons appear in the card footer on hover
 - **Compare bar** floats above the footer when items are selected for diff
 - **Sensitive data tooltip** — hover the warning badge to see what types were detected
 - Overlay-based modals (no system sheet conflicts with menubar windows)
-- Keyboard navigation: arrow keys to select, Enter to copy, Escape to deselect
+- **Undo toast** — floating material-backed toast with undo action on delete
+- Keyboard navigation: arrow keys to select, Enter to auto-paste, Escape to deselect
 - Staggered card entry animations
 - **Performance optimized** — static caches for app icons and hex colors, lazy image loading, pre-computed URL parsing, snappy animations (~150ms)
 
@@ -151,7 +167,7 @@ Clean, card-based design:
 | **General** | Max history, retention days, deduplication, launch at login, sound on copy |
 | **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app |
 | **Security** | Detect sensitive data, auto-mask |
-| **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), modifier key selection |
+| **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), **live shortcut recording** — click and press any key combo to rebind |
 | **Exclusions** | Apps to never capture from (1Password, Bitwarden, LastPass, Keychain Access by default) |
 | **Rules** | Create, edit, enable/disable, and test clipboard auto-transform rules |
 
@@ -218,6 +234,7 @@ CutCopyPaste/
 │   ├── Snippets/           # Snippet management
 │   ├── Analytics/          # Dashboard and charts
 │   ├── PasteStack/         # Multi-copy UI
+│   ├── Onboarding/         # First-run welcome flow
 │   └── Components/         # Reusable buttons, badges, menus
 ├── Extensions/             # Transferable conformance, helpers
 └── Utilities/              # Constants, keyboard shortcuts

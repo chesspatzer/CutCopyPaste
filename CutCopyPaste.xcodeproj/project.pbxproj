@@ -53,6 +53,7 @@
 		7DDCA5A177056A60D1E2E60F /* ClipboardItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B015D74D3CD36CBB92793FB1 /* ClipboardItemRow.swift */; };
 		7FDB5BC86979FD740DAE1FFB /* CaseTransforms.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02710B0C3F43F374853F7AEC /* CaseTransforms.swift */; };
 		7FFA8233101D66958B0D76DE /* TransformResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C6D364E9F29FAFE21B13CD9 /* TransformResultView.swift */; };
+		887674570BE3CFCFDFE452B8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5AF3CC6E7C41C01E584B1C /* OnboardingView.swift */; };
 		8DD06A3273B0D7BFE70D39EF /* CutCopyPasteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10487A359F68EBADF7197135 /* CutCopyPasteApp.swift */; };
 		9004A3C3BBE37F5DB1CDBA62 /* NSImage+Thumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E20FFAE94A1AEE9DCAE3D60 /* NSImage+Thumbnail.swift */; };
 		9763D667892C336341E85F24 /* ActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0200C3C0FCBF961737D50424 /* ActionsMenu.swift */; };
@@ -152,6 +153,7 @@
 		75D45C780BA24F7F291FB901 /* TypeBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeBadge.swift; sourceTree = "<group>"; };
 		7719C0ABB1F59131E900E650 /* CopiesChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiesChartView.swift; sourceTree = "<group>"; };
 		77D06CEA679082E0C487AC40 /* SnippetFillInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetFillInView.swift; sourceTree = "<group>"; };
+		7B5AF3CC6E7C41C01E584B1C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7E583957A4D84097A895CCC3 /* PopoverContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverContentView.swift; sourceTree = "<group>"; };
 		82A3C27351D0F1E4F922E477 /* CutCopyPaste.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CutCopyPaste.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88FA047F9E184FDCAC4B2ADA /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
@@ -299,6 +301,7 @@
 				112FE80533CE359829CB9CF4 /* Analytics */,
 				37C7063C5A92E4587B3D0B13 /* Components */,
 				75270282D5F166ABC33E4313 /* MainPopover */,
+				B11BCF5363B863EE4EB485BA /* Onboarding */,
 				A41C83C1DFCAD6B1C2EB1803 /* PasteStack */,
 				D673211D11DBC5D84ED52FAE /* Settings */,
 				63593B457E8F92FE53779D04 /* Snippets */,
@@ -406,6 +409,14 @@
 				1E2B68B8A514206F65BD1DD4 /* Transforms */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		B11BCF5363B863EE4EB485BA /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				7B5AF3CC6E7C41C01E584B1C /* OnboardingView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		C60A3D1BE05BAFDD17950435 /* CutCopyPasteTests */ = {
@@ -607,6 +618,7 @@
 				9AAAF4070748CB33422B4BD5 /* NaturalLanguageSearchService.swift in Sources */,
 				4DFAB8989F54FE9926BE0DB7 /* OCRResultView.swift in Sources */,
 				5715CB911139F24BE7BE58B0 /* OCRService.swift in Sources */,
+				887674570BE3CFCFDFE452B8 /* OnboardingView.swift in Sources */,
 				9BEA21966AB0F69EC2E83EDB /* PasteStackBannerView.swift in Sources */,
 				BB6A9F4BD0B82321E734E082 /* PasteStackItemRow.swift in Sources */,
 				4F0C4219C933DF568C34C978 /* PasteStackManager.swift in Sources */,

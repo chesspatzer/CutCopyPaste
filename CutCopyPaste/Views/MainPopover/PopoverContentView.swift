@@ -50,6 +50,7 @@ struct PopoverContentView: View {
                         showTimestamps: appState.preferences.showTimestamps,
                         showSourceApp: appState.preferences.showSourceApp,
                         onCopy: { item in appState.copyToClipboard(item) },
+                        onAutoPaste: { item in appState.copyToClipboard(item, autoPaste: true) },
                         onPin: { item in appState.togglePin(item) },
                         onDelete: { item in appState.deleteItem(item) }
                     )
@@ -166,10 +167,33 @@ struct PopoverContentView: View {
                 )
                 .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
+
+            // Onboarding overlay
+            if appState.showOnboarding {
+                overlayBackdrop { }
+                OnboardingView()
+                    .environmentObject(appState)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
+                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+
+            // Undo delete toast
+            if appState.showUndoToast {
+                VStack {
+                    Spacer()
+                    undoToast
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 36)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
         }
         .animation(Constants.Animation.snappy, value: appState.showDiffView)
         .animation(Constants.Animation.snappy, value: appState.showMergeView)
         .animation(Constants.Animation.snappy, value: appState.showTransformResult)
+        .animation(Constants.Animation.snappy, value: appState.showOnboarding)
+        .animation(Constants.Animation.snappy, value: appState.showUndoToast)
     }
 
     // MARK: - Overlay Backdrop
@@ -188,6 +212,21 @@ struct PopoverContentView: View {
                 .font(Constants.Typography.title)
                 .foregroundStyle(.primary.opacity(0.8))
                 .tracking(-0.3)
+
+            // Privacy badge
+            HStack(spacing: 3) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 7, weight: .bold))
+                Text("Offline")
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(.green.opacity(0.6))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background {
+                Capsule()
+                    .fill(.green.opacity(0.08))
+            }
 
             Spacer()
 
@@ -321,6 +360,44 @@ struct PopoverContentView: View {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         } else {
             NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        }
+    }
+
+    // MARK: - Undo Toast
+
+    private var undoToast: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "trash")
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            Text("Item deleted")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.8))
+
+            Spacer()
+
+            Button {
+                withAnimation(Constants.Animation.snappy) {
+                    appState.undoDelete()
+                }
+            } label: {
+                Text("Undo")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.accentColor)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+                }
+                .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
         }
     }
 

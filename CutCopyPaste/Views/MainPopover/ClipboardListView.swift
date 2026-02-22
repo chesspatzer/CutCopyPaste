@@ -6,6 +6,7 @@ struct ClipboardListView: View {
     let showTimestamps: Bool
     let showSourceApp: Bool
     let onCopy: (ClipboardItem) -> Void
+    let onAutoPaste: (ClipboardItem) -> Void
     let onPin: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
 
@@ -30,6 +31,7 @@ struct ClipboardListView: View {
                             showSourceApp: showSourceApp,
                             isSelected: item.id == selectedItemID,
                             onCopy: { onCopy(item) },
+                            onAutoPaste: { onAutoPaste(item) },
                             onPin: { onPin(item) },
                             onDelete: {
                                 withAnimation(Constants.Animation.snappy) {
@@ -66,7 +68,7 @@ struct ClipboardListView: View {
             }
             .onKeyPress(.return) {
                 if let index = selectedIndex, index < items.count {
-                    onCopy(items[index])
+                    onAutoPaste(items[index])
                 }
                 return .handled
             }
