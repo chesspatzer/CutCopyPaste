@@ -11,18 +11,24 @@ struct ClipboardListView: View {
 
     @State private var selectedIndex: Int? = nil
     @State private var appearedIDs: Set<UUID> = []
+    @State private var appearCounter: Int = 0
+
+    private var selectedItemID: UUID? {
+        guard let idx = selectedIndex, idx < items.count else { return nil }
+        return items[idx].id
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: Constants.UI.cardSpacing) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    ForEach(items) { item in
                         ClipboardItemRow(
                             item: item,
                             displayMode: displayMode,
                             showTimestamps: showTimestamps,
                             showSourceApp: showSourceApp,
-                            isSelected: selectedIndex == index,
+                            isSelected: item.id == selectedItemID,
                             onCopy: { onCopy(item) },
                             onPin: { onPin(item) },
                             onDelete: {
@@ -36,7 +42,9 @@ struct ClipboardListView: View {
                         .offset(y: appearedIDs.contains(item.id) ? 0 : 6)
                         .onAppear {
                             if !appearedIDs.contains(item.id) {
-                                let delay = Double(min(index, 15)) * Constants.Animation.staggerDelay
+                                let order = appearCounter
+                                appearCounter += 1
+                                let delay = Double(min(order, 10)) * Constants.Animation.staggerDelay
                                 withAnimation(Constants.Animation.smooth.delay(delay)) {
                                     appearedIDs.insert(item.id)
                                 }
@@ -66,9 +74,10 @@ struct ClipboardListView: View {
                 selectedIndex = nil
                 return .handled
             }
-            .onChange(of: items.map(\.id)) {
-                // Reset selection when items change (search, category switch)
+            .onChange(of: items.count) {
+                // Reset selection when item count changes (search, category switch, delete)
                 selectedIndex = nil
+                appearCounter = 0
             }
         }
     }

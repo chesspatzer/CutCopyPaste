@@ -14,6 +14,10 @@ struct ClipboardItemRow: View {
     @State private var isHovered = false
     @State private var justCopied = false
 
+    // Cached image — computed once and stored in @State
+    @State private var cachedImage: NSImage?
+    @State private var cachedImageDataHash: Int?
+
     private var isSelectedForCompare: Bool {
         appState.diffSelection.contains(where: { $0.id == item.id })
     }
@@ -102,6 +106,11 @@ struct ClipboardItemRow: View {
         .contextMenu {
             contextMenuItems
         }
+        .onAppear {
+            if item.contentType == .image {
+                loadImageIfNeeded()
+            }
+        }
     }
 
     // MARK: - Top Bar
@@ -169,17 +178,7 @@ struct ClipboardItemRow: View {
 
     @ViewBuilder
     private var imagePreview: some View {
-        let imageSource: NSImage? = {
-            if let thumbData = item.thumbnailData, let img = NSImage(data: thumbData) {
-                return img
-            }
-            if let fullData = item.imageData, let img = NSImage(data: fullData) {
-                return img
-            }
-            return nil
-        }()
-
-        if let nsImage = imageSource {
+        if let nsImage = cachedImage {
             Image(nsImage: nsImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -202,19 +201,36 @@ struct ClipboardItemRow: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color.primary.opacity(0.03))
             }
+            .onAppear { loadImageIfNeeded() }
+        }
+    }
+
+    private func loadImageIfNeeded() {
+        let dataHash = item.thumbnailData?.hashValue ?? item.imageData?.hashValue ?? 0
+        guard cachedImageDataHash != dataHash else { return }
+        cachedImageDataHash = dataHash
+        if let thumbData = item.thumbnailData, let img = NSImage(data: thumbData) {
+            cachedImage = img
+        } else if let fullData = item.imageData, let img = NSImage(data: fullData) {
+            cachedImage = img
         }
     }
 
     // MARK: - Link Preview
 
-    @ViewBuilder
-    private var linkPreview: some View {
+    private var parsedLink: (urlString: String, domain: String, displayPath: String) {
         let urlString = item.textContent?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let url = URL(string: urlString)
         let host = url?.host ?? urlString
         let domain = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
         let path = url?.path ?? ""
         let displayPath = path == "/" ? "" : path
+        return (urlString, domain, displayPath)
+    }
+
+    @ViewBuilder
+    private var linkPreview: some View {
+        let link = parsedLink
 
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
@@ -223,19 +239,19 @@ struct ClipboardItemRow: View {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(Color.blue.opacity(0.1))
                         .frame(width: 28, height: 28)
-                    Text(String(domain.prefix(1)).uppercased())
+                    Text(String(link.domain.prefix(1)).uppercased())
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(.blue)
                 }
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(domain)
+                    Text(link.domain)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.primary.opacity(0.85))
                         .lineLimit(1)
 
-                    if !displayPath.isEmpty {
-                        Text(displayPath)
+                    if !link.displayPath.isEmpty {
+                        Text(link.displayPath)
                             .font(.system(size: 11))
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
@@ -251,7 +267,7 @@ struct ClipboardItemRow: View {
             }
 
             // Full URL
-            Text(urlString)
+            Text(link.urlString)
                 .font(.system(size: 11))
                 .foregroundStyle(.blue.opacity(0.7))
                 .lineLimit(1)
@@ -472,7 +488,12 @@ struct ClipboardItemRow: View {
 
     // MARK: - Color Parsing
 
+    private static var hexColorCache: [String: Color] = [:]
+
     private func parseHexColor(_ text: String) -> Color? {
+        if let cached = Self.hexColorCache[text] {
+            return cached
+        }
         guard text.hasPrefix("#") else { return nil }
         var hex = String(text.dropFirst())
         guard hex.count == 3 || hex.count == 6 else { return nil }
@@ -484,7 +505,9 @@ struct ClipboardItemRow: View {
         let r = Double((value >> 16) & 0xFF) / 255.0
         let g = Double((value >> 8) & 0xFF) / 255.0
         let b = Double(value & 0xFF) / 255.0
-        return Color(red: r, green: g, blue: b)
+        let color = Color(red: r, green: g, blue: b)
+        Self.hexColorCache[text] = color
+        return color
     }
 }
 
@@ -493,8 +516,12 @@ struct ClipboardItemRow: View {
 private struct SourceAppIcon: View {
     let bundleID: String
 
+    // Static cache shared across all instances — NSWorkspace lookups are expensive
+    private static var iconCache: [String: NSImage] = [:]
+    private static var failedLookups: Set<String> = []
+
     var body: some View {
-        if let icon = appIcon {
+        if let icon = cachedIcon {
             Image(nsImage: icon)
                 .resizable()
                 .frame(width: 14, height: 14)
@@ -502,9 +529,20 @@ private struct SourceAppIcon: View {
         }
     }
 
-    private var appIcon: NSImage? {
+    private var cachedIcon: NSImage? {
+        if let cached = Self.iconCache[bundleID] {
+            return cached
+        }
+        if Self.failedLookups.contains(bundleID) {
+            return nil
+        }
         let workspace = NSWorkspace.shared
-        guard let url = workspace.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
-        return workspace.icon(forFile: url.path)
+        guard let url = workspace.urlForApplication(withBundleIdentifier: bundleID) else {
+            Self.failedLookups.insert(bundleID)
+            return nil
+        }
+        let icon = workspace.icon(forFile: url.path)
+        Self.iconCache[bundleID] = icon
+        return icon
     }
 }

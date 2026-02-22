@@ -46,14 +46,10 @@ struct SearchBarView: View {
                 }
                 .shadow(color: .black.opacity(isFocused ? 0.06 : 0), radius: 8, y: 2)
         }
-        .scaleEffect(isFocused ? 1.0 : 0.99)
         .onHover { hovering in
-            withAnimation(Constants.Animation.quick) {
-                isHovered = hovering
-            }
+            isHovered = hovering
         }
         .animation(Constants.Animation.quick, value: isFocused)
-        .animation(Constants.Animation.quick, value: text.isEmpty)
         .onAppear {
             isFocused = true
         }

@@ -140,6 +140,7 @@ Clean, card-based design:
 - Overlay-based modals (no system sheet conflicts with menubar windows)
 - Keyboard navigation: arrow keys to select, Enter to copy, Escape to deselect
 - Staggered card entry animations
+- **Performance optimized** — static caches for app icons and hex colors, lazy image loading, pre-computed URL parsing, snappy animations (~150ms)
 
 ---
 

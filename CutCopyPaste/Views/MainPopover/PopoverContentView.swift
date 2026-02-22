@@ -70,8 +70,6 @@ struct PopoverContentView: View {
                 footer
             }
             .background(Color(nsColor: .windowBackgroundColor))
-            .animation(Constants.Animation.smooth, value: appState.clipboardItems.isEmpty)
-            .animation(Constants.Animation.snappy, value: appState.selectedCategory)
 
             // Overlay modals (replaces .sheet() to avoid MenuBarExtra dismiss bug)
             if appState.showDiffView {
@@ -172,8 +170,6 @@ struct PopoverContentView: View {
         .animation(Constants.Animation.snappy, value: appState.showDiffView)
         .animation(Constants.Animation.snappy, value: appState.showMergeView)
         .animation(Constants.Animation.snappy, value: appState.showTransformResult)
-        .animation(Constants.Animation.snappy, value: appState.detailItem?.id)
-        .animation(Constants.Animation.snappy, value: appState.ocrResultItem?.id)
     }
 
     // MARK: - Overlay Backdrop

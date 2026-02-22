@@ -2,20 +2,11 @@ import SwiftUI
 
 struct WorkspaceFilterView: View {
     @EnvironmentObject var appState: AppState
-
-    private var workspaces: [String] {
-        // Only show workspaces that are actual project names, not just app names
-        let meaningful = appState.clipboardItems.filter { item in
-            guard let workspace = item.workspaceName else { return false }
-            // Exclude if workspace name is the same as the source app (not a real project)
-            return workspace != item.sourceAppName
-        }
-        let names = Set(meaningful.compactMap(\.workspaceName))
-        return names.sorted()
-    }
+    @State private var cachedWorkspaces: [(name: String, icon: String)] = []
+    @State private var lastItemCount: Int = 0
 
     var body: some View {
-        if !workspaces.isEmpty {
+        if !cachedWorkspaces.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     WorkspaceChip(
@@ -28,14 +19,14 @@ struct WorkspaceFilterView: View {
                         }
                     }
 
-                    ForEach(workspaces, id: \.self) { workspace in
+                    ForEach(cachedWorkspaces, id: \.name) { workspace in
                         WorkspaceChip(
-                            name: workspace,
-                            icon: workspaceIcon(for: workspace),
-                            isSelected: appState.selectedWorkspace == workspace
+                            name: workspace.name,
+                            icon: workspace.icon,
+                            isSelected: appState.selectedWorkspace == workspace.name
                         ) {
                             withAnimation(Constants.Animation.snappy) {
-                                appState.selectedWorkspace = appState.selectedWorkspace == workspace ? nil : workspace
+                                appState.selectedWorkspace = appState.selectedWorkspace == workspace.name ? nil : workspace.name
                             }
                         }
                     }
@@ -44,17 +35,35 @@ struct WorkspaceFilterView: View {
             }
             .padding(.bottom, 6)
         }
+
+        Color.clear.frame(height: 0)
+            .onAppear { rebuildWorkspaces() }
+            .onChange(of: appState.clipboardItems.count) { rebuildWorkspaces() }
     }
 
-    private func workspaceIcon(for workspace: String) -> String {
-        let item = appState.clipboardItems.first { $0.workspaceName == workspace }
-        switch item?.workspaceType {
-        case "xcode":   return "hammer"
-        case "vscode":  return "chevron.left.forwardslash.chevron.right"
-        case "terminal": return "terminal"
-        case "finder":  return "folder"
-        default:        return "app"
+    private func rebuildWorkspaces() {
+        let items = appState.clipboardItems
+        guard items.count != lastItemCount else { return }
+        lastItemCount = items.count
+
+        var seen = Set<String>()
+        var result: [(name: String, icon: String)] = []
+        for item in items {
+            guard let workspace = item.workspaceName,
+                  workspace != item.sourceAppName,
+                  !seen.contains(workspace) else { continue }
+            seen.insert(workspace)
+            let icon: String
+            switch item.workspaceType {
+            case "xcode":   icon = "hammer"
+            case "vscode":  icon = "chevron.left.forwardslash.chevron.right"
+            case "terminal": icon = "terminal"
+            case "finder":  icon = "folder"
+            default:        icon = "app"
+            }
+            result.append((name: workspace, icon: icon))
         }
+        cachedWorkspaces = result.sorted { $0.name < $1.name }
     }
 }
 

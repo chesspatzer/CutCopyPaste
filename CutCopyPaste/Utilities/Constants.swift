@@ -33,10 +33,10 @@ enum Constants {
     }
 
     enum Animation {
-        static let snappy: SwiftUI.Animation = .snappy(duration: 0.25, extraBounce: 0.05)
-        static let quick: SwiftUI.Animation = .spring(duration: 0.2, bounce: 0.15)
-        static let smooth: SwiftUI.Animation = .smooth(duration: 0.3)
-        static let bouncy: SwiftUI.Animation = .spring(duration: 0.35, bounce: 0.25)
-        static let staggerDelay: Double = 0.03
+        static let snappy: SwiftUI.Animation = .snappy(duration: 0.15, extraBounce: 0.02)
+        static let quick: SwiftUI.Animation = .spring(duration: 0.12, bounce: 0.08)
+        static let smooth: SwiftUI.Animation = .smooth(duration: 0.18)
+        static let bouncy: SwiftUI.Animation = .spring(duration: 0.2, bounce: 0.15)
+        static let staggerDelay: Double = 0.015
     }
 }
