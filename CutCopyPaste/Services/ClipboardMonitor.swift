@@ -8,6 +8,7 @@ final class ClipboardMonitor: ObservableObject {
     private var lastChangeCount: Int
     private let storageService: StorageService
     private let exclusionManager: ExclusionListManager
+    private let workspaceDetector = WorkspaceDetector()
     private let logger = Logger(subsystem: "com.cutcopypaste.app", category: "ClipboardMonitor")
 
     @Published var isMonitoring: Bool = false
@@ -18,6 +19,12 @@ final class ClipboardMonitor: ObservableObject {
 
     /// Callback fired when a new item is captured, for UI refresh.
     var onNewItem: (() -> Void)?
+
+    /// Paste stack manager reference for multi-copy mode
+    var pasteStackManager: PasteStackManager?
+
+    /// Rule engine for auto-transforms
+    var ruleEngine: ClipboardRuleEngine?
 
     init(storageService: StorageService, exclusionManager: ExclusionListManager) {
         self.storageService = storageService
@@ -53,9 +60,9 @@ final class ClipboardMonitor: ObservableObject {
         lastChangeCount = currentCount
 
         // Check source app exclusion
-        if let frontApp = NSWorkspace.shared.frontmostApplication,
-           let bundleID = frontApp.bundleIdentifier,
-           exclusionManager.isExcluded(bundleID: bundleID) {
+        let frontApp = NSWorkspace.shared.frontmostApplication
+        let bundleID = frontApp?.bundleIdentifier
+        if let bundleID, exclusionManager.isExcluded(bundleID: bundleID) {
             logger.debug("Skipping capture from excluded app: \(bundleID)")
             return
         }
@@ -63,7 +70,53 @@ final class ClipboardMonitor: ObservableObject {
         // Extract and store
         guard let item = extractClipboardContent() else { return }
 
+        // Detect workspace context
+        if let workspace = workspaceDetector.detectCurrentWorkspace() {
+            item.workspacePath = workspace.path
+            item.workspaceName = workspace.name
+            item.workspaceType = workspace.type.rawValue
+        }
+
+        // Detect sensitive data
+        if UserPreferences.shared.detectSensitiveData, let text = item.textContent {
+            let matches = SensitiveDataDetector.shared.detect(in: text)
+            if !matches.isEmpty {
+                item.sensitiveDataTypes = matches.map(\.type.rawValue)
+                if UserPreferences.shared.autoMaskSensitive {
+                    item.isMasked = true
+                }
+            }
+        }
+
+        // Summarize long text
+        if let text = item.textContent, TextSummarizer.shared.shouldSummarize(text) {
+            item.summary = TextSummarizer.shared.summarize(text).oneLiner
+        }
+
         Task {
+            // Apply clipboard rules (auto-transforms)
+            if let text = item.textContent, let ruleEngine {
+                let transformed = await ruleEngine.applyRules(
+                    to: text,
+                    contentType: item.contentType,
+                    sourceBundleID: bundleID
+                )
+                if transformed != text {
+                    item.textContent = transformed
+                    item.characterCount = transformed.count
+                }
+            }
+
+            // Auto OCR for images
+            if UserPreferences.shared.autoOCR,
+               item.contentType == .image,
+               let imageData = item.imageData {
+                let text = try? await OCRService.shared.extractText(from: imageData)
+                if let text, !text.isEmpty {
+                    item.ocrText = text
+                }
+            }
+
             // Deduplication check
             if UserPreferences.shared.deduplicateConsecutive,
                await storageService.isDuplicateOfMostRecent(item.textContent, contentType: item.contentType) {
@@ -73,7 +126,14 @@ final class ClipboardMonitor: ObservableObject {
 
             await storageService.save(item)
 
+            // Push to paste stack if active
             await MainActor.run {
+                if let pasteStackManager, pasteStackManager.isActive {
+                    pasteStackManager.push(
+                        textContent: item.textContent,
+                        contentType: item.contentType
+                    )
+                }
                 self.onNewItem?()
             }
         }

@@ -6,6 +6,7 @@ enum CategoryFilter: String, CaseIterable, Identifiable {
     case images
     case links
     case pinned
+    case snippets
 
     var id: String { rawValue }
 
@@ -15,26 +16,28 @@ enum CategoryFilter: String, CaseIterable, Identifiable {
         case .text:   return "Text"
         case .images: return "Images"
         case .links:  return "Links"
-        case .pinned: return "Pinned"
+        case .pinned:   return "Pinned"
+        case .snippets: return "Snippets"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .all:    return "square.grid.2x2"
-        case .text:   return "doc.text"
-        case .images: return "photo"
-        case .links:  return "link"
-        case .pinned: return "pin.fill"
+        case .all:      return "square.grid.2x2"
+        case .text:     return "doc.text"
+        case .images:   return "photo"
+        case .links:    return "link"
+        case .pinned:   return "pin.fill"
+        case .snippets: return "text.badge.plus"
         }
     }
 
     var itemType: ClipboardItemType? {
         switch self {
-        case .all, .pinned: return nil
-        case .text:         return .text
-        case .images:       return .image
-        case .links:        return .link
+        case .all, .pinned, .snippets: return nil
+        case .text:                    return .text
+        case .images:                  return .image
+        case .links:                   return .link
         }
     }
 }
@@ -44,32 +47,41 @@ struct CategoryTabBar: View {
     @Namespace private var tabNamespace
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 2) {
             ForEach(CategoryFilter.allCases) { category in
                 Button {
                     withAnimation(Constants.Animation.snappy) {
                         selection = category
                     }
                 } label: {
-                    HStack(spacing: 5) {
+                    let isSelected = selection == category
+                    HStack(spacing: 4) {
                         Image(systemName: category.systemImage)
                             .font(.system(size: 10, weight: .semibold))
-                        Text(category.displayName)
-                            .font(.system(size: 11, weight: .medium))
+                        // Show label only for the selected tab to save space
+                        if isSelected {
+                            Text(category.displayName)
+                                .font(.system(size: 11, weight: .medium))
+                                .lineLimit(1)
+                                .fixedSize()
+                                .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
+                        }
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, isSelected ? 10 : 8)
                     .padding(.vertical, 6)
-                    .foregroundStyle(selection == category ? .primary : .tertiary)
+                    .foregroundStyle(isSelected ? .primary : .tertiary)
                     .background {
-                        if selection == category {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(.ultraThinMaterial)
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(Color(nsColor: .controlBackgroundColor))
                                 .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
                                 .matchedGeometryEffect(id: "activeTab", in: tabNamespace)
                         }
                     }
+                    .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .help(category.displayName)
             }
         }
         .padding(3)

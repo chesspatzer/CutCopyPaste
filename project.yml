@@ -7,6 +7,11 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
 
+packages:
+  swift-argument-parser:
+    url: https://github.com/apple/swift-argument-parser.git
+    from: "1.3.0"
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -36,6 +41,22 @@ targets:
         SWIFT_STRICT_CONCURRENCY: complete
     entitlements:
       path: CutCopyPaste/Resources/CutCopyPaste.entitlements
+
+  CutCopyPasteCLI:
+    type: tool
+    platform: macOS
+    sources:
+      - path: CutCopyPasteCLI
+      - path: CutCopyPaste/Models
+      - path: CutCopyPaste/Utilities/Constants.swift
+    dependencies:
+      - package: swift-argument-parser
+        product: ArgumentParser
+    settings:
+      base:
+        PRODUCT_NAME: ccp
+        SWIFT_STRICT_CONCURRENCY: complete
+        GENERATE_INFOPLIST_FILE: true
 
   CutCopyPasteTests:
     type: bundle.unit-test

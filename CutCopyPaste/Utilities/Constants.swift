@@ -13,11 +13,20 @@ enum Constants {
     }
 
     enum UI {
-        static let popoverDefaultWidth: CGFloat = 360
-        static let popoverDefaultHeight: CGFloat = 520
+        static let popoverDefaultWidth: CGFloat = 400
+        static let popoverDefaultHeight: CGFloat = 560
         static let cornerRadius: CGFloat = 10
-        static let rowPaddingCompact: CGFloat = 8
-        static let rowPaddingComfortable: CGFloat = 11
+        static let rowPaddingCompact: CGFloat = 7
+        static let rowPaddingComfortable: CGFloat = 10
+    }
+
+    enum Storage {
+        static var storeURL: URL {
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let appDir = appSupport.appendingPathComponent("CutCopyPaste")
+            try? FileManager.default.createDirectory(at: appDir, withIntermediateDirectories: true)
+            return appDir.appendingPathComponent("CutCopyPaste.store")
+        }
     }
 
     enum Animation {

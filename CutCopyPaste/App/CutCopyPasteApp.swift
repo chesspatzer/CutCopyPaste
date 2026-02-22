@@ -9,7 +9,14 @@ struct CutCopyPasteApp: App {
     init() {
         let container: ModelContainer
         do {
-            container = try ModelContainer(for: ClipboardItem.self)
+            let config = ModelConfiguration(url: Constants.Storage.storeURL)
+            container = try ModelContainer(
+                for: ClipboardItem.self,
+                     Snippet.self,
+                     SnippetFolder.self,
+                     ClipboardRule.self,
+                configurations: config
+            )
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
@@ -37,5 +44,12 @@ struct CutCopyPasteApp: App {
             SettingsView()
                 .environmentObject(appState)
         }
+
+        // Analytics window
+        Window("Analytics", id: "analytics") {
+            AnalyticsDashboardView()
+                .environmentObject(appState)
+        }
+        .defaultSize(width: 700, height: 500)
     }
 }

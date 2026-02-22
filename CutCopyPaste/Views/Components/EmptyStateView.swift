@@ -58,41 +58,45 @@ struct EmptyStateView: View {
 
     private var iconName: String {
         switch category {
-        case .all:    return "clipboard"
-        case .text:   return "doc.text"
-        case .images: return "photo.on.rectangle"
-        case .links:  return "link.circle"
-        case .pinned: return "pin.circle"
+        case .all:      return "clipboard"
+        case .text:     return "doc.text"
+        case .images:   return "photo.on.rectangle"
+        case .links:    return "link.circle"
+        case .pinned:   return "pin.circle"
+        case .snippets: return "text.badge.plus"
         }
     }
 
     private var iconColor: Color {
         switch category {
-        case .all:    return .accentColor
-        case .text:   return .secondary
-        case .images: return .blue
-        case .links:  return .green
-        case .pinned: return .orange
+        case .all:      return .accentColor
+        case .text:     return .secondary
+        case .images:   return .blue
+        case .links:    return .green
+        case .pinned:   return .orange
+        case .snippets: return .purple
         }
     }
 
     private var title: String {
         switch category {
-        case .all:    return "No clips yet"
-        case .text:   return "No text clips"
-        case .images: return "No images"
-        case .links:  return "No links"
-        case .pinned: return "Nothing pinned"
+        case .all:      return "No clips yet"
+        case .text:     return "No text clips"
+        case .images:   return "No images"
+        case .links:    return "No links"
+        case .pinned:   return "Nothing pinned"
+        case .snippets: return "No snippets"
         }
     }
 
     private var subtitle: String {
         switch category {
-        case .all:    return "Copy something to get started.\nYour history will appear here."
-        case .text:   return "Text you copy will show up here."
-        case .images: return "Images you copy will show up here."
-        case .links:  return "URLs you copy will show up here."
-        case .pinned: return "Pin important clips to keep\nthem at your fingertips."
+        case .all:      return "Copy something to get started.\nYour history will appear here."
+        case .text:     return "Text you copy will show up here."
+        case .images:   return "Images you copy will show up here."
+        case .links:    return "URLs you copy will show up here."
+        case .pinned:   return "Pin important clips to keep\nthem at your fingertips."
+        case .snippets: return "Create reusable text snippets\nwith templates."
         }
     }
 }

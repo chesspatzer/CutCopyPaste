@@ -6,14 +6,14 @@ struct SearchBarView: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isFocused ? .primary : .tertiary)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(isFocused ? .secondary : .tertiary)
 
             TextField("Search clips...", text: $text)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .focused($isFocused)
 
             if !text.isEmpty {
@@ -23,18 +23,18 @@ struct SearchBarView: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
         .background {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Color(nsColor: .controlBackgroundColor))
                 .overlay {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .strokeBorder(

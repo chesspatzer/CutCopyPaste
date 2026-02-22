@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject var appState: AppState
+
     var body: some View {
         TabView {
             GeneralSettingsView()
@@ -22,7 +24,18 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Exclusions", systemImage: "eye.slash")
                 }
+
+            SecuritySettingsView()
+                .tabItem {
+                    Label("Security", systemImage: "shield")
+                }
+
+            RulesSettingsView()
+                .environmentObject(appState)
+                .tabItem {
+                    Label("Rules", systemImage: "wand.and.rays")
+                }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 550, height: 420)
     }
 }

@@ -23,6 +23,21 @@ final class ClipboardItem {
     var isPinned: Bool
     var characterCount: Int?
 
+    // Sensitive data detection
+    var sensitiveDataTypes: [String]?
+    var isMasked: Bool
+
+    // Text summarization
+    var summary: String?
+
+    // Image OCR
+    var ocrText: String?
+
+    // Context-aware history
+    var workspacePath: String?
+    var workspaceName: String?
+    var workspaceType: String?
+
     @Transient
     var preview: String {
         switch contentType {
@@ -62,5 +77,6 @@ final class ClipboardItem {
         self.useCount = 0
         self.isPinned = false
         self.characterCount = textContent?.count
+        self.isMasked = false
     }
 }

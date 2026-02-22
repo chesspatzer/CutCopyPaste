@@ -27,8 +27,8 @@ final class UserPreferences: ObservableObject {
     // MARK: - Appearance
 
     @AppStorage("displayMode") var displayMode: DisplayMode = .comfortable
-    @AppStorage("popoverWidth") var popoverWidth: Double = 340
-    @AppStorage("popoverHeight") var popoverHeight: Double = 480
+    @AppStorage("popoverWidth") var popoverWidth: Double = 400
+    @AppStorage("popoverHeight") var popoverHeight: Double = 560
     @AppStorage("showSourceApp") var showSourceApp: Bool = true
     @AppStorage("showTimestamps") var showTimestamps: Bool = true
 
@@ -49,6 +49,23 @@ final class UserPreferences: ObservableObject {
             excludedBundleIDsRaw = newValue.sorted().joined(separator: ",")
         }
     }
+
+    // MARK: - Security
+
+    @AppStorage("detectSensitiveData") var detectSensitiveData: Bool = true
+    @AppStorage("autoMaskSensitive") var autoMaskSensitive: Bool = false
+
+    // MARK: - OCR
+
+    @AppStorage("autoOCR") var autoOCR: Bool = false
+
+    // MARK: - Snippets
+
+    @AppStorage("snippetsSeeded") var snippetsSeeded: Bool = false
+
+    // MARK: - Paste Stack
+
+    @AppStorage("pasteStackMode") var pasteStackMode: String = "queue"
 
     // MARK: - Launch
 

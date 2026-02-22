@@ -42,6 +42,9 @@ actor StorageService {
             items = items.filter { item in
                 item.textContent?.lowercased().contains(query) == true
                 || item.sourceAppName?.lowercased().contains(query) == true
+                || item.ocrText?.lowercased().contains(query) == true
+                || item.summary?.lowercased().contains(query) == true
+                || item.workspaceName?.lowercased().contains(query) == true
             }
         }
 
@@ -105,6 +108,86 @@ actor StorageService {
             modelContext.delete(item)
         }
         try? modelContext.save()
+    }
+
+    // MARK: - Mask
+
+    func toggleMask(_ itemID: UUID) {
+        guard let item = fetchByID(itemID) else { return }
+        item.isMasked.toggle()
+        try? modelContext.save()
+    }
+
+    // MARK: - OCR
+
+    func updateOCRText(_ itemID: UUID, text: String) {
+        guard let item = fetchByID(itemID) else { return }
+        item.ocrText = text
+        try? modelContext.save()
+    }
+
+    // MARK: - Advanced Fetch
+
+    func fetchItems(
+        filterType: ClipboardItemType? = nil,
+        searchIntent: SearchIntent,
+        pinnedOnly: Bool = false,
+        workspaceName: String? = nil,
+        limit: Int = 100
+    ) -> [ClipboardItem] {
+        var descriptor = FetchDescriptor<ClipboardItem>(
+            sortBy: [SortDescriptor(\.lastUsedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit
+
+        guard var items = try? modelContext.fetch(descriptor) else { return [] }
+
+        // Content type from intent or explicit filter
+        let typeFilter = searchIntent.contentTypeFilter ?? filterType
+        if let typeFilter {
+            items = items.filter { $0.contentType == typeFilter }
+        }
+        if pinnedOnly {
+            items = items.filter { $0.isPinned }
+        }
+
+        // Date range filter
+        if let dateRange = searchIntent.dateRange {
+            items = items.filter { $0.createdAt >= dateRange.start && $0.createdAt <= dateRange.end }
+        }
+
+        // Source app filter
+        if let appFilter = searchIntent.sourceAppFilter {
+            let filter = appFilter.lowercased()
+            items = items.filter {
+                $0.sourceAppName?.lowercased().contains(filter) == true
+                || $0.sourceAppBundleID?.lowercased().contains(filter) == true
+            }
+        }
+
+        // Workspace filter
+        if let workspaceName {
+            items = items.filter { $0.workspaceName == workspaceName }
+        }
+
+        // Fuzzy text search
+        if let query = searchIntent.textQuery, !query.isEmpty {
+            let searchService = NaturalLanguageSearchService.shared
+            items = items.filter { item in
+                let fields = [item.textContent, item.sourceAppName, item.ocrText, item.summary, item.workspaceName]
+                return fields.compactMap { $0 }.contains { field in
+                    searchService.fuzzyScore(query: query, against: field) > 0.3
+                }
+            }
+            // Sort by relevance
+            items.sort { a, b in
+                let scoreA = [a.textContent, a.sourceAppName].compactMap { $0 }.map { searchService.fuzzyScore(query: query, against: $0) }.max() ?? 0
+                let scoreB = [b.textContent, b.sourceAppName].compactMap { $0 }.map { searchService.fuzzyScore(query: query, against: $0) }.max() ?? 0
+                return scoreA > scoreB
+            }
+        }
+
+        return items
     }
 
     // MARK: - Retention
