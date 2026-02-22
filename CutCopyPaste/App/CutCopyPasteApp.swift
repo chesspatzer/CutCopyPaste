@@ -1,6 +1,21 @@
 import SwiftUI
 import SwiftData
 
+/// Sets `NSAppearance` directly on the hosting NSWindow.
+/// `.preferredColorScheme` doesn't propagate to MenuBarExtra panels,
+/// so we reach into the window and set it explicitly.
+private struct WindowAppearanceSetter: NSViewRepresentable {
+    let appearance: NSAppearance?
+
+    func makeNSView(context: Context) -> NSView { NSView() }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            nsView.window?.appearance = appearance
+        }
+    }
+}
+
 @main
 struct CutCopyPasteApp: App {
     let modelContainer: ModelContainer
@@ -64,6 +79,7 @@ struct CutCopyPasteApp: App {
                 )
                 .animation(Constants.Animation.snappy, value: appState.showDiffView)
                 .preferredColorScheme(appearanceMode.colorScheme)
+                .background(WindowAppearanceSetter(appearance: appearanceMode.nsAppearance))
         } label: {
             Image(systemName: "clipboard")
                 .symbolRenderingMode(.hierarchical)

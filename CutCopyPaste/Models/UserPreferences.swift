@@ -45,6 +45,14 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         case .dark:   return "moon"
         }
     }
+
+    var nsAppearance: NSAppearance? {
+        switch self {
+        case .system: return nil
+        case .light:  return NSAppearance(named: .aqua)
+        case .dark:   return NSAppearance(named: .darkAqua)
+        }
+    }
 }
 
 final class UserPreferences: ObservableObject {
