@@ -19,7 +19,7 @@ struct PinButton: View {
             action()
         } label: {
             Image(systemName: isPinned ? "pin.fill" : "pin")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(isPinned ? .orange : .secondary)
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: 26, height: 26)

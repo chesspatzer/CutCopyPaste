@@ -56,7 +56,7 @@ struct ActionsMenu: View {
             }
         } label: {
             Image(systemName: "wand.and.stars")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
                 .frame(width: 24, height: 24)
                 .background {

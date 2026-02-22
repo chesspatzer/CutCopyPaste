@@ -185,8 +185,9 @@ struct PopoverContentView: View {
     private var header: some View {
         HStack(alignment: .center) {
             Text("CutCopyPaste")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(Constants.Typography.title)
                 .foregroundStyle(.primary.opacity(0.8))
+                .tracking(-0.3)
 
             Spacer()
 
@@ -196,7 +197,7 @@ struct PopoverContentView: View {
                     openSettings()
                 } label: {
                     Image(systemName: "gear")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.tertiary)
                         .frame(width: 28, height: 28)
                         .contentShape(Circle())
@@ -243,7 +244,7 @@ struct PopoverContentView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(.tertiary)
                         .frame(width: 28, height: 28)
                         .contentShape(Circle())
@@ -262,10 +263,10 @@ struct PopoverContentView: View {
     private var compareBar: some View {
         HStack {
             Image(systemName: "arrow.left.arrow.right")
-                .font(.system(size: 10, weight: .semibold))
+                .font(Constants.Typography.footnote)
                 .foregroundStyle(.blue)
             Text("\(appState.diffSelection.count) of 2 selected")
-                .font(.system(size: 11, weight: .medium))
+                .font(Constants.Typography.bar)
                 .foregroundStyle(.secondary)
             Spacer()
             Button("Clear") {
@@ -292,7 +293,7 @@ struct PopoverContentView: View {
     private var mergeBar: some View {
         HStack {
             Text("\(appState.mergeSelection.count) selected")
-                .font(.system(size: 11, weight: .medium))
+                .font(Constants.Typography.bar)
                 .foregroundStyle(.secondary)
             Spacer()
             Button("Cancel") {
@@ -329,12 +330,12 @@ struct PopoverContentView: View {
         HStack(spacing: 4) {
             let count = appState.clipboardItems.count
             Text("\(count) \(count == 1 ? "clip" : "clips")")
-                .font(.system(size: 10, weight: .medium))
+                .font(Constants.Typography.footer)
                 .foregroundStyle(.quaternary)
 
             if appState.pasteStackManager.isActive {
                 Text("\u{00B7} Stack: \(appState.pasteStackManager.depth)")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(Constants.Typography.footer)
                     .foregroundStyle(.purple.opacity(0.5))
             }
 
@@ -342,11 +343,11 @@ struct PopoverContentView: View {
 
             if appState.isMergeMode {
                 Text("Select items to merge")
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footer)
                     .foregroundStyle(.purple.opacity(0.5))
             } else if appState.diffSelection.count == 1 {
                 Text("Select one more to compare")
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footer)
                     .foregroundStyle(.blue.opacity(0.5))
             }
         }

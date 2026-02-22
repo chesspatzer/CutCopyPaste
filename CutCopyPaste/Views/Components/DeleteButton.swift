@@ -10,7 +10,7 @@ struct DeleteButton: View {
             action()
         } label: {
             Image(systemName: "trash")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(isHovered ? .red : .secondary)
                 .frame(width: 26, height: 26)
                 .background {

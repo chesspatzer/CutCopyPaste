@@ -57,9 +57,9 @@ struct CategoryTabBar: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: category.systemImage)
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
                             Text(category.displayName)
-                                .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                                .font(isSelected ? Constants.Typography.tabSelected : Constants.Typography.tab)
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)

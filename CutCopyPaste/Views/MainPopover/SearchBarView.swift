@@ -8,12 +8,12 @@ struct SearchBarView: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(isFocused ? .secondary : .tertiary)
 
             TextField("Search your clipboard...", text: $text)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13))
+                .font(Constants.Typography.search)
                 .focused($isFocused)
 
             if !text.isEmpty {
@@ -23,7 +23,7 @@ struct SearchBarView: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, design: .rounded))
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)

@@ -77,9 +77,9 @@ private struct WorkspaceChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(Constants.Typography.micro)
                 Text(name)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(Constants.Typography.chip)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)

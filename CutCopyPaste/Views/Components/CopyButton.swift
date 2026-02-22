@@ -25,7 +25,7 @@ struct CopyButton: View {
             }
         } label: {
             Image(systemName: showCheckmark ? "checkmark.circle.fill" : "doc.on.doc")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .medium, design: .rounded))
                 .foregroundStyle(showCheckmark ? .green : .secondary)
                 .contentTransition(.symbolEffect(.replace.downUp))
                 .frame(width: 26, height: 26)

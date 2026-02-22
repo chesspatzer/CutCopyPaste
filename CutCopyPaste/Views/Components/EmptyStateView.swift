@@ -23,18 +23,18 @@ struct EmptyStateView: View {
                     .scaleEffect(appeared ? 1.0 : 0.5)
 
                 Image(systemName: iconName)
-                    .font(.system(size: 30, weight: .light))
+                    .font(.system(size: 30, weight: .light, design: .rounded))
                     .foregroundStyle(iconColor.opacity(0.5))
                     .scaleEffect(appeared ? 1.0 : 0.3)
             }
 
             VStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(Constants.Typography.emptyTitle)
                     .foregroundStyle(.secondary)
 
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(Constants.Typography.emptySubtitle)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)

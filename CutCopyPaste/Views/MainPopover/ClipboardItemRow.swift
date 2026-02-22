@@ -44,7 +44,7 @@ struct ClipboardItemRow: View {
             // Summary for long text
             if let summary = item.summary, !item.isMasked {
                 Text(summary)
-                    .font(.system(size: 11))
+                    .font(Constants.Typography.summary)
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -93,10 +93,10 @@ struct ClipboardItemRow: View {
         .draggable(TransferableClipboardData(from: item)) {
             HStack(spacing: 6) {
                 Image(systemName: item.contentType.systemImage)
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footnote)
                     .foregroundStyle(.secondary)
                 Text(item.preview)
-                    .font(.system(size: 11))
+                    .font(Constants.Typography.caption)
                     .lineLimit(1)
                     .frame(maxWidth: 200)
             }
@@ -124,7 +124,7 @@ struct ClipboardItemRow: View {
 
             if showSourceApp, let app = item.sourceAppName {
                 Text(app)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(Constants.Typography.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -132,14 +132,14 @@ struct ClipboardItemRow: View {
 
             if showTimestamps {
                 Text(item.createdAt.relativeFormatted())
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footnote)
                     .foregroundStyle(.tertiary)
             }
 
             // Pin indicator
             if item.isPinned {
                 Image(systemName: "pin.fill")
-                    .font(.system(size: 9, weight: .bold))
+                    .font(Constants.Typography.micro)
                     .foregroundStyle(.orange)
             }
 
@@ -162,7 +162,7 @@ struct ClipboardItemRow: View {
         case .link:
             if item.isMasked {
                 Text(displayText)
-                    .font(.system(size: 13))
+                    .font(Constants.Typography.body)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             } else {
@@ -240,19 +240,19 @@ struct ClipboardItemRow: View {
                         .fill(Color.blue.opacity(0.1))
                         .frame(width: 28, height: 28)
                     Text(String(link.domain.prefix(1)).uppercased())
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(Constants.Typography.faviconInitial)
                         .foregroundStyle(.blue)
                 }
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(link.domain)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(Constants.Typography.linkDomain)
                         .foregroundStyle(.primary.opacity(0.85))
                         .lineLimit(1)
 
                     if !link.displayPath.isEmpty {
                         Text(link.displayPath)
-                            .font(.system(size: 11))
+                            .font(Constants.Typography.linkDetail)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -262,13 +262,13 @@ struct ClipboardItemRow: View {
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(Constants.Typography.footnote)
                     .foregroundStyle(.blue.opacity(0.5))
             }
 
             // Full URL
             Text(link.urlString)
-                .font(.system(size: 11))
+                .font(Constants.Typography.linkDetail)
                 .foregroundStyle(.blue.opacity(0.7))
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -290,11 +290,11 @@ struct ClipboardItemRow: View {
         let count = item.filePaths?.count ?? 0
         return VStack(alignment: .leading, spacing: 2) {
             Text("\(count) file\(count == 1 ? "" : "s")")
-                .font(.system(size: 13, weight: .medium))
+                .font(Constants.Typography.fileTitle)
                 .foregroundStyle(.primary)
             if let first = item.filePaths?.first {
                 Text(first.components(separatedBy: "/").last ?? first)
-                    .font(.system(size: 12))
+                    .font(Constants.Typography.linkDetail)
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -318,7 +318,7 @@ struct ClipboardItemRow: View {
                 }
             }
             Text(displayText)
-                .font(.system(size: 13))
+                .font(Constants.Typography.body)
                 .lineLimit(displayMode == .compact ? 2 : 3)
                 .truncationMode(.tail)
                 .foregroundStyle(.primary.opacity(0.9))
@@ -332,27 +332,27 @@ struct ClipboardItemRow: View {
             // Content type + metadata
             HStack(spacing: 4) {
                 Image(systemName: item.contentType.systemImage)
-                    .font(.system(size: 9))
+                    .font(Constants.Typography.micro)
                 Text(item.contentType.displayName)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(Constants.Typography.footnote)
             }
             .foregroundStyle(.quaternary)
 
             if let count = item.characterCount, item.contentType != .image {
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footnote)
                 Text("\(count) chars")
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footnote)
                     .foregroundStyle(.quaternary)
             }
 
             if item.ocrText != nil {
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
-                    .font(.system(size: 10))
+                    .font(Constants.Typography.footnote)
                 Text("OCR")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(Constants.Typography.footnote)
                     .foregroundStyle(.quaternary)
             }
 
@@ -365,7 +365,7 @@ struct ClipboardItemRow: View {
                         appState.toggleDiffSelection(item)
                     } label: {
                         Image(systemName: isSelectedForCompare ? "arrow.left.arrow.right.circle.fill" : "arrow.left.arrow.right")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(isSelectedForCompare ? .blue : .secondary)
                             .frame(width: 24, height: 24)
                             .background {
