@@ -41,14 +41,20 @@ final class MarkdownRenderer {
         let lines = text.components(separatedBy: .newlines)
         guard lines.count >= 2 else { return false }
 
+        // If the text looks like source code, `# comments` are not markdown headings.
+        // Check for common code patterns that disambiguate from markdown.
+        let sample = String(text.prefix(2000))
+        let looksLikeCode = sample.range(of: "^(import |from |def |class |func |let |var |const |function |public |private |package |#include|#!|using |module )", options: [.regularExpression, .anchored]) != nil
+            || sample.range(of: "\n(import |from |def |class |func |let |var |const |function |public |private |package |#include|using |module )", options: .regularExpression) != nil
+
         var score = 0
         let checkLines = lines.prefix(20)
 
         for line in checkLines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
-            // Headings: # ## ### etc.
-            if trimmed.range(of: "^#{1,6} .+", options: .regularExpression) != nil { score += 3 }
+            // Headings: # ## ### etc. — skip if text looks like code (# is a comment in Python/Ruby/Shell)
+            if !looksLikeCode, trimmed.range(of: "^#{1,6} .+", options: .regularExpression) != nil { score += 3 }
             // Unordered lists: - item or * item
             else if trimmed.range(of: "^[\\-\\*] .+", options: .regularExpression) != nil { score += 1 }
             // Ordered lists: 1. item
@@ -61,8 +67,7 @@ final class MarkdownRenderer {
             else if trimmed.range(of: "^(---|\\*\\*\\*|___)\\s*$", options: .regularExpression) != nil { score += 2 }
         }
 
-        // Inline patterns (check full text)
-        let sample = String(text.prefix(2000))
+        // Inline patterns (check full text — sample already computed above)
         // Bold: **text** or __text__
         if sample.range(of: "\\*\\*[^*]+\\*\\*", options: .regularExpression) != nil { score += 2 }
         // Italic: *text* or _text_ (but not inside words like file_name)
