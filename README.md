@@ -291,7 +291,23 @@ ccp search "query"
 ## Installation
 
 ### Direct Download
-Download the latest DMG from [GitHub Releases](https://github.com/chesspatzer/CutCopyPaste/releases). The app checks for updates automatically via Sparkle — you can also check manually from **Settings > About > Check for Updates**.
+Download the latest DMG from [GitHub Releases](https://github.com/chesspatzer/CutCopyPaste/releases).
+
+**First launch (important):** Since the app is not yet notarized with Apple, macOS Gatekeeper will block it on first open. To launch:
+
+1. Open the DMG and drag **CutCopyPaste** to **Applications**
+2. **Right-click** (or Control-click) the app in Applications and choose **Open**
+3. Click **Open** in the dialog that appears
+4. The app will launch and appear in your **menu bar** (no Dock icon — it's a menu bar app)
+
+You only need to do this once — subsequent launches work normally.
+
+> **Alternatively**, run this in Terminal to remove the quarantine flag:
+> ```bash
+> xattr -cr /Applications/CutCopyPaste.app
+> ```
+
+The app checks for updates automatically via Sparkle — you can also check manually from **Settings > About > Check for Updates**.
 
 ### Mac App Store
 Also available on the Mac App Store (sandboxed build). The App Store version has a few limitations compared to the direct download:
