@@ -7,6 +7,7 @@ struct ClipboardListView: View {
     let showSourceApp: Bool
     let onCopy: (ClipboardItem) -> Void
     let onAutoPaste: (ClipboardItem) -> Void
+    let onPastePlain: (ClipboardItem) -> Void
     let onPin: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
 
@@ -107,6 +108,7 @@ struct ClipboardListView: View {
             isSelected: item.id == selectedItemID,
             onCopy: { onCopy(item) },
             onAutoPaste: { onAutoPaste(item) },
+            onPastePlain: { onPastePlain(item) },
             onPin: { onPin(item) },
             onDelete: { onDelete(item) }
         )

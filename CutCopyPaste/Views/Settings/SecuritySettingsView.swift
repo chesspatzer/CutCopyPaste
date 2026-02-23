@@ -6,6 +6,15 @@ struct SecuritySettingsView: View {
     var body: some View {
         Form {
             Section {
+                Toggle("Ignore concealed clipboard items", isOn: $preferences.respectConcealedTypes)
+            } header: {
+                Label("Password Protection", systemImage: "lock.shield")
+            } footer: {
+                Text("Automatically skips items marked as concealed or transient by password managers (1Password, Bitwarden, KeePassXC, etc.). Uses the org.nspasteboard.ConcealedType standard — more reliable than app exclusion.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Section {
                 Toggle("Detect sensitive data in clipboard", isOn: $preferences.detectSensitiveData)
                 Toggle("Auto-mask detected sensitive data", isOn: $preferences.autoMaskSensitive)
                     .disabled(!preferences.detectSensitiveData)

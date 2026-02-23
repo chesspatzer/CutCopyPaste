@@ -277,6 +277,34 @@ final class AppState: ObservableObject {
     }
     #endif
 
+    func copyToClipboardPlainText(_ item: ClipboardItem, autoPaste: Bool = false) {
+        clipboardMonitor.stopMonitoring()
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+
+        // Always set plain text only — strips RTF formatting
+        if let text = item.textContent {
+            pasteboard.setString(text, forType: .string)
+        }
+
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+        Task { await storageService.touchItem(item.id) }
+
+        if autoPaste {
+            dismissPopover()
+            #if !APPSTORE
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Self.simulatePaste()
+            }
+            #endif
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            self?.clipboardMonitor.startMonitoring()
+        }
+    }
+
     func copyText(_ text: String) {
         clipboardMonitor.stopMonitoring()
         let pasteboard = NSPasteboard.general

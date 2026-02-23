@@ -78,6 +78,23 @@ struct GeneralSettingsView: View {
                 Toggle(isOn: $prefs.playSoundOnCopy) {
                     Label("Sound on capture", systemImage: "speaker.wave.2")
                 }
+
+                LabeledContent {
+                    Picker("", selection: $prefs.clipboardCheckInterval) {
+                        Text("0.25s (Fastest)").tag(0.25)
+                        Text("0.5s (Default)").tag(0.5)
+                        Text("1.0s").tag(1.0)
+                        Text("2.0s (Battery saver)").tag(2.0)
+                    }
+                    .labelsHidden()
+                    .frame(width: 160)
+                    .onChange(of: prefs.clipboardCheckInterval) {
+                        appState.clipboardMonitor.restartMonitoring()
+                    }
+                } label: {
+                    Label("Check interval", systemImage: "timer")
+                        .foregroundStyle(.primary)
+                }
             } header: {
                 Text("Behavior")
             }

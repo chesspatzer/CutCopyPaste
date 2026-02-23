@@ -56,7 +56,7 @@ targets:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) APPSTORE"
     infoPlist:
       SUFeedURL: "https://github.com/chesspatzer/CutCopyPaste/releases/latest/download/appcast.xml"
-      SUPublicEDKey: "REPLACE_WITH_YOUR_EDDSA_PUBLIC_KEY"
+      SUPublicEDKey: "9S3bLGI+RZG4xhdxsk821CLicaDhLi3fvotSKi72jXc="
     entitlements:
       path: CutCopyPaste/Resources/CutCopyPaste.entitlements
 

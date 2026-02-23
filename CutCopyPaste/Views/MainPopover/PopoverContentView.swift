@@ -29,6 +29,55 @@ struct PopoverContentView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 6)
 
+                // Monitoring status banners
+                if !appState.clipboardMonitor.isMonitoring {
+                    HStack(spacing: 6) {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.system(size: 11))
+                        Text("Monitoring paused")
+                            .font(.system(size: 11, weight: .medium))
+                        Spacer()
+                        Button {
+                            withAnimation(Constants.Animation.snappy) {
+                                appState.clipboardMonitor.startMonitoring()
+                            }
+                        } label: {
+                            Text("Resume")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 5)
+                    .background(Color.orange.opacity(0.08))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                if appState.clipboardMonitor.skipNextCapture {
+                    HStack(spacing: 6) {
+                        Image(systemName: "forward.fill")
+                            .font(.system(size: 9))
+                        Text("Skipping next copy")
+                            .font(.system(size: 11, weight: .medium))
+                        Spacer()
+                        Button {
+                            withAnimation(Constants.Animation.snappy) {
+                                appState.clipboardMonitor.skipNextCapture = false
+                            }
+                        } label: {
+                            Text("Cancel")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .foregroundStyle(.purple)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 5)
+                    .background(Color.purple.opacity(0.08))
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
                 // Search (not shown on snippets tab)
                 if appState.selectedCategory != .snippets {
                     SearchBarView(text: $appState.searchText, searchMode: $appState.searchMode)
@@ -89,6 +138,7 @@ struct PopoverContentView: View {
                         showSourceApp: appState.preferences.showSourceApp,
                         onCopy: { item in appState.copyToClipboard(item) },
                         onAutoPaste: { item in appState.copyToClipboard(item, autoPaste: true) },
+                        onPastePlain: { item in appState.copyToClipboardPlainText(item, autoPaste: true) },
                         onPin: { item in appState.togglePin(item) },
                         onDelete: { item in appState.deleteItem(item) }
                     )
@@ -282,6 +332,25 @@ struct PopoverContentView: View {
                 .buttonStyle(.plain)
                 .help("Smart Collections")
 
+                // Pause/Resume monitoring
+                Button {
+                    withAnimation(Constants.Animation.snappy) {
+                        if appState.clipboardMonitor.isMonitoring {
+                            appState.clipboardMonitor.stopMonitoring()
+                        } else {
+                            appState.clipboardMonitor.startMonitoring()
+                        }
+                    }
+                } label: {
+                    Image(systemName: appState.clipboardMonitor.isMonitoring ? "pause.circle" : "play.circle.fill")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(appState.clipboardMonitor.isMonitoring ? Color.secondary : .orange)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help(appState.clipboardMonitor.isMonitoring ? "Pause monitoring" : "Resume monitoring")
+
                 // Settings
                 SettingsLink {
                     Image(systemName: "gear")
@@ -300,6 +369,32 @@ struct PopoverContentView: View {
                         openWindow(id: "analytics")
                     } label: {
                         Label("Analytics", systemImage: "chart.bar")
+                    }
+
+                    Divider()
+
+                    Button {
+                        withAnimation(Constants.Animation.snappy) {
+                            appState.clipboardMonitor.skipNextCapture = true
+                        }
+                    } label: {
+                        Label("Skip Next Copy", systemImage: "forward.end")
+                    }
+                    .disabled(appState.clipboardMonitor.skipNextCapture)
+
+                    Button {
+                        withAnimation(Constants.Animation.snappy) {
+                            if appState.clipboardMonitor.isMonitoring {
+                                appState.clipboardMonitor.stopMonitoring()
+                            } else {
+                                appState.clipboardMonitor.startMonitoring()
+                            }
+                        }
+                    } label: {
+                        Label(
+                            appState.clipboardMonitor.isMonitoring ? "Pause Monitoring" : "Resume Monitoring",
+                            systemImage: appState.clipboardMonitor.isMonitoring ? "pause" : "play"
+                        )
                     }
 
                     Divider()

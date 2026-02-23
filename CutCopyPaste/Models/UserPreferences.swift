@@ -131,6 +131,11 @@ final class UserPreferences: ObservableObject {
 
     @AppStorage("detectSensitiveData") var detectSensitiveData: Bool = true
     @AppStorage("autoMaskSensitive") var autoMaskSensitive: Bool = false
+    @AppStorage("respectConcealedTypes") var respectConcealedTypes: Bool = true
+
+    // MARK: - Monitoring
+
+    @AppStorage("clipboardCheckInterval") var clipboardCheckInterval: Double = 0.5
 
     // MARK: - AI Search
 
@@ -178,6 +183,8 @@ final class UserPreferences: ObservableObject {
         excludedBundleIDsRaw = ""
         detectSensitiveData = true
         autoMaskSensitive = false
+        respectConcealedTypes = true
+        clipboardCheckInterval = 0.5
         useLLMSearch = true
         autoOCR = true
         launchAtLogin = false

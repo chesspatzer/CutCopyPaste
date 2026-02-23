@@ -7,6 +7,15 @@ struct ActionsMenu: View {
 
     var body: some View {
         Menu {
+            // Paste as plain text (rich text items only)
+            if item.contentType == .richText {
+                Button {
+                    appState.copyToClipboardPlainText(item, autoPaste: true)
+                } label: {
+                    Label("Paste as Plain Text", systemImage: "doc.plaintext")
+                }
+            }
+
             // Copy as... formats
             if let text = item.textContent {
                 Section("Copy as...") {

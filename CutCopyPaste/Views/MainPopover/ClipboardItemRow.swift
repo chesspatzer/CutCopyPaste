@@ -8,6 +8,7 @@ struct ClipboardItemRow: View {
     let isSelected: Bool
     let onCopy: () -> Void
     let onAutoPaste: () -> Void
+    let onPastePlain: () -> Void
     let onPin: () -> Void
     let onDelete: () -> Void
 
@@ -543,6 +544,10 @@ struct ClipboardItemRow: View {
 
                     DeleteButton(action: onDelete)
 
+                    if item.contentType == .richText {
+                        PastePlainButton(action: { onPastePlain() })
+                    }
+
                     CopyButton(action: { performCopy() })
                 }
                 .transition(.asymmetric(
@@ -601,6 +606,9 @@ struct ClipboardItemRow: View {
     @ViewBuilder
     private var contextMenuItems: some View {
         Button { onCopy() } label: { Label("Copy", systemImage: "doc.on.doc") }
+        if item.contentType == .richText {
+            Button { onPastePlain() } label: { Label("Paste as Plain Text", systemImage: "doc.plaintext") }
+        }
         Button { onPin() } label: { Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin") }
 
         Divider()
