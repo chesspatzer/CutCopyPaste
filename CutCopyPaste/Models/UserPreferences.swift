@@ -112,7 +112,7 @@ final class UserPreferences: ObservableObject {
     // MARK: - Shortcuts
 
     @AppStorage("globalToggleKeyCode") var globalToggleKeyCode: Int = 9 // V key
-    @AppStorage("globalToggleModifiers") var globalToggleModifiers: Int = 0x000900 // Cmd+Shift
+    @AppStorage("globalToggleModifiers") var globalToggleModifiers: Int = 0x120000 // Cmd+Shift (maskCommand | maskShift)
 
     // MARK: - Exclusions
 
@@ -174,7 +174,7 @@ final class UserPreferences: ObservableObject {
         showSourceApp = true
         showTimestamps = true
         globalToggleKeyCode = 9
-        globalToggleModifiers = 0x000900
+        globalToggleModifiers = 0x120000
         excludedBundleIDsRaw = ""
         detectSensitiveData = true
         autoMaskSensitive = false
