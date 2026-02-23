@@ -15,11 +15,6 @@ struct SettingsView: View {
                     Label("Appearance", systemImage: "paintbrush.pointed")
                 }
 
-            ShortcutsSettingsView()
-                .tabItem {
-                    Label("Shortcuts", systemImage: "command.square")
-                }
-
             ExclusionsSettingsView()
                 .tabItem {
                     Label("Exclusions", systemImage: "eye.slash")

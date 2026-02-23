@@ -51,7 +51,7 @@ struct PopoverContentView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 5)
                     .background(Color.orange.opacity(0.08))
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.bottom, 4)
                 }
 
                 if appState.clipboardMonitor.skipNextCapture {
@@ -75,7 +75,7 @@ struct PopoverContentView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 5)
                     .background(Color.purple.opacity(0.08))
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.bottom, 4)
                 }
 
                 // Search (not shown on snippets tab)
@@ -124,26 +124,29 @@ struct PopoverContentView: View {
                 }
 
                 // Content
-                if appState.selectedCategory == .snippets {
-                    SnippetListView()
+                Group {
+                    if appState.selectedCategory == .snippets {
+                        SnippetListView()
+                            .transition(.opacity)
+                    } else if appState.clipboardItems.isEmpty {
+                        EmptyStateView(category: appState.selectedCategory)
+                            .transition(.opacity)
+                    } else {
+                        ClipboardListView(
+                            items: appState.clipboardItems,
+                            displayMode: appState.preferences.displayMode,
+                            showTimestamps: appState.preferences.showTimestamps,
+                            showSourceApp: appState.preferences.showSourceApp,
+                            onCopy: { item in appState.copyToClipboard(item) },
+                            onAutoPaste: { item in appState.copyToClipboard(item, autoPaste: true) },
+                            onPastePlain: { item in appState.copyToClipboardPlainText(item, autoPaste: true) },
+                            onPin: { item in appState.togglePin(item) },
+                            onDelete: { item in appState.deleteItem(item) }
+                        )
                         .transition(.opacity)
-                } else if appState.clipboardItems.isEmpty {
-                    EmptyStateView(category: appState.selectedCategory)
-                        .transition(.opacity)
-                } else {
-                    ClipboardListView(
-                        items: appState.clipboardItems,
-                        displayMode: appState.preferences.displayMode,
-                        showTimestamps: appState.preferences.showTimestamps,
-                        showSourceApp: appState.preferences.showSourceApp,
-                        onCopy: { item in appState.copyToClipboard(item) },
-                        onAutoPaste: { item in appState.copyToClipboard(item, autoPaste: true) },
-                        onPastePlain: { item in appState.copyToClipboardPlainText(item, autoPaste: true) },
-                        onPin: { item in appState.togglePin(item) },
-                        onDelete: { item in appState.deleteItem(item) }
-                    )
-                    .transition(.opacity)
+                    }
                 }
+                .clipped()
 
                 // Compare bar — shows when items selected for diff
                 if !appState.diffSelection.isEmpty {
@@ -289,6 +292,8 @@ struct PopoverContentView: View {
         .animation(Constants.Animation.snappy, value: appState.showUndoToast)
         .animation(Constants.Animation.snappy, value: appState.showSmartCollections)
         .animation(Constants.Animation.snappy, value: appState.activeSmartCollection?.id)
+        .animation(Constants.Animation.snappy, value: appState.clipboardMonitor.isMonitoring)
+        .animation(Constants.Animation.snappy, value: appState.clipboardMonitor.skipNextCapture)
         .onAppear {
             appState.unseenCopyCount = 0
         }

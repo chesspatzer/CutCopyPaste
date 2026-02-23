@@ -109,11 +109,6 @@ final class UserPreferences: ObservableObject {
     @AppStorage("showSourceApp") var showSourceApp: Bool = true
     @AppStorage("showTimestamps") var showTimestamps: Bool = true
 
-    // MARK: - Shortcuts
-
-    @AppStorage("globalToggleKeyCode") var globalToggleKeyCode: Int = 9 // V key
-    @AppStorage("globalToggleModifiers") var globalToggleModifiers: Int = 0x120000 // Cmd+Shift (maskCommand | maskShift)
-
     // MARK: - Exclusions
 
     @AppStorage("excludedBundleIDs") var excludedBundleIDsRaw: String = ""
@@ -178,8 +173,6 @@ final class UserPreferences: ObservableObject {
         popoverHeight = 750
         showSourceApp = true
         showTimestamps = true
-        globalToggleKeyCode = 9
-        globalToggleModifiers = 0x120000
         excludedBundleIDsRaw = ""
         detectSensitiveData = true
         autoMaskSensitive = false

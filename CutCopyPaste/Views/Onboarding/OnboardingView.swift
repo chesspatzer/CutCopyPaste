@@ -47,15 +47,6 @@ struct OnboardingView: View {
             .tabViewStyle(.automatic)
             .frame(height: 320)
 
-            #if !APPSTORE
-            // Accessibility permission prompt (shown on last page)
-            if currentPage == pages.count - 1 {
-                accessibilityPrompt
-                    .padding(.horizontal, 24)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-            }
-            #endif
-
             Spacer()
 
             // Bottom controls
@@ -130,39 +121,6 @@ struct OnboardingView: View {
         }
     }
 
-    #if !APPSTORE
-    private var accessibilityPrompt: some View {
-        VStack(spacing: 8) {
-            if appState.shortcutManager.needsAccessibilityPermission {
-                HStack(spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                        .font(.system(size: 14))
-
-                    Text("Grant Accessibility access for global shortcuts")
-                        .font(.system(size: 12, weight: .medium))
-
-                    Spacer()
-
-                    Button("Open Settings") {
-                        appState.shortcutManager.openAccessibilitySettings()
-                    }
-                    .controlSize(.small)
-                    .buttonStyle(.bordered)
-                }
-                .padding(12)
-                .background {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.orange.opacity(0.06))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(Color.orange.opacity(0.15), lineWidth: 0.5)
-                        }
-                }
-            }
-        }
-    }
-    #endif
 }
 
 // MARK: - Model

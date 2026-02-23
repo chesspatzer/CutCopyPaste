@@ -39,33 +39,6 @@ struct CutCopyPasteApp: App {
         self.modelContainer = container
         let state = AppState(modelContainer: container)
         self._appState = StateObject(wrappedValue: state)
-
-        // Wire up global hotkey to toggle the MenuBarExtra panel
-        state.shortcutManager.onTogglePopover = {
-            // The MenuBarExtra panel is the first NSPanel with the app's content
-            if let panel = NSApp.windows.first(where: { $0 is NSPanel && $0.className.contains("StatusBarWindow") }) {
-                if panel.isVisible {
-                    panel.orderOut(nil)
-                } else {
-                    panel.makeKeyAndOrderFront(nil)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            } else {
-                // Fallback: simulate click on status item
-                // Find any panel that looks like our MenuBarExtra
-                for window in NSApp.windows {
-                    if window is NSPanel && window.level == .statusBar {
-                        if window.isVisible {
-                            window.orderOut(nil)
-                        } else {
-                            window.makeKeyAndOrderFront(nil)
-                            NSApp.activate(ignoringOtherApps: true)
-                        }
-                        return
-                    }
-                }
-            }
-        }
     }
 
     var body: some Scene {

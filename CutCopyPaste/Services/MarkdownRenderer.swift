@@ -44,8 +44,25 @@ final class MarkdownRenderer {
         // If the text looks like source code, `# comments` are not markdown headings.
         // Check for common code patterns that disambiguate from markdown.
         let sample = String(text.prefix(2000))
-        let looksLikeCode = sample.range(of: "^(import |from |def |class |func |let |var |const |function |public |private |package |#include|#!|using |module )", options: [.regularExpression, .anchored]) != nil
+
+        // Language keywords at line starts
+        let hasKeywords = sample.range(of: "^(import |from |def |class |func |let |var |const |function |public |private |package |#include|#!|using |module )", options: [.regularExpression, .anchored]) != nil
             || sample.range(of: "\n(import |from |def |class |func |let |var |const |function |public |private |package |#include|using |module )", options: .regularExpression) != nil
+
+        // Variable assignments (Python, JS, Ruby, etc.): `x = ...`, `my_dict = {...`
+        let hasAssignments = sample.range(of: "^\\w+ *= *[^=]", options: .regularExpression) != nil
+            || sample.range(of: "\n\\w+ *= *[^=]", options: .regularExpression) != nil
+
+        // Function calls: `print(`, `result.update(`
+        let hasFunctionCalls = sample.range(of: "\\w+\\.?\\w+\\(", options: .regularExpression) != nil
+
+        // Common code punctuation: braces, semicolons, arrows
+        let hasCodePunctuation = sample.range(of: "[{};]|=>|->|\\$\\{", options: .regularExpression) != nil
+
+        // Shebang
+        let hasShebang = sample.hasPrefix("#!")
+
+        let looksLikeCode = hasKeywords || hasShebang || (hasAssignments && (hasFunctionCalls || hasCodePunctuation))
 
         var score = 0
         let checkLines = lines.prefix(20)

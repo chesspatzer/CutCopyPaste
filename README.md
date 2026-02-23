@@ -213,8 +213,7 @@ Context-aware actions appear on hover based on content type:
 - Copy button (single click) still puts content on the clipboard without pasting
 
 ### Onboarding
-- First-run welcome flow introduces key features and shortcuts
-- Prompts for Accessibility permission grant (required for global hotkey)
+- First-run welcome flow introduces key features
 - Privacy reassurance — "100% offline" highlighted upfront
 
 ### Undo Delete
@@ -260,7 +259,6 @@ Clean, card-based design:
 | **General** | Max history, retention days, deduplication, launch at login, sound on copy, clipboard check interval, export/import |
 | **Appearance** | Theme (System / Light / Dark), compact/comfortable mode, popover dimensions, show timestamps, show source app, time-grouped history |
 | **Security** | Concealed type protection, detect sensitive data, auto-mask |
-| **Shortcuts** | Global toggle hotkey (default: Cmd+Shift+V), **live shortcut recording** — click and press any key combo to rebind |
 | **Exclusions** | Apps to never capture from (1Password, Bitwarden, LastPass, Keychain Access by default) |
 | **Rules** | Create, edit, enable/disable, and test clipboard auto-transform rules |
 | **About** | Version info, architecture, build details |
@@ -313,7 +311,7 @@ The app checks for updates automatically via Sparkle — you can also check manu
 Also available on the Mac App Store (sandboxed build). The App Store version has a few limitations compared to the direct download:
 - Auto-paste (simulated Cmd+V) is disabled — you press Cmd+V manually after copying
 - Workspace detection uses app name only (no window title extraction)
-- Global hotkey works but cannot consume the key event
+- No global hotkey support
 
 ---
 
@@ -364,7 +362,7 @@ CutCopyPaste/
 │   ├── Onboarding/         # First-run welcome flow
 │   └── Components/         # Reusable buttons, badges, menus
 ├── Extensions/             # Transferable conformance, helpers
-└── Utilities/              # Constants, keyboard shortcuts, LRU cache
+└── Utilities/              # Constants, LRU cache
 
 CutCopyPasteCLI/            # CLI tool (list, copy, paste, search)
 ```

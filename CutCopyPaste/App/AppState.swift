@@ -9,7 +9,6 @@ final class AppState: ObservableObject {
     // Core Services
     let storageService: StorageService
     let clipboardMonitor: ClipboardMonitor
-    let shortcutManager: KeyboardShortcutManager
     let exclusionManager = ExclusionListManager()
 
     /// Main-context handle for delete operations — avoids @ModelActor cross-context detachment crashes
@@ -86,7 +85,6 @@ final class AppState: ObservableObject {
             storageService: storage,
             exclusionManager: exclusionManager
         )
-        self.shortcutManager = KeyboardShortcutManager()
         self.snippetService = SnippetService(modelContainer: modelContainer)
         self.ruleEngine = ClipboardRuleEngine(modelContainer: modelContainer)
         self.analyticsService = AnalyticsService(modelContainer: modelContainer)
@@ -97,14 +95,20 @@ final class AppState: ObservableObject {
         // Start monitoring clipboard
         clipboardMonitor.startMonitoring()
 
-        // Register global hotkey
-        shortcutManager.register()
-
         // Refresh UI when new item captured
         clipboardMonitor.onNewItem = { [weak self] in
             self?.refreshItems()
             self?.unseenCopyCount += 1
         }
+
+        // Forward ClipboardMonitor changes to trigger SwiftUI updates
+        // (nested ObservableObject @Published properties are not observed automatically)
+        clipboardMonitor.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
 
         // Observe search and category changes with debounce
         $searchText

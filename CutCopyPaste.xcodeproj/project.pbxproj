@@ -16,7 +16,6 @@
 		0EFA87C97E516C956098D076 /* CCPCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6B448803A544E5069DC00A /* CCPCommand.swift */; };
 		139DA45EB2F89D7352E0387B /* NaturalLanguageSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4A6F6011C07F68D467114 /* NaturalLanguageSearchTests.swift */; };
 		1668E5E9EF08DAE993211A02 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D4AFACFF3D46BB7A178BD4 /* EmptyStateView.swift */; };
-		1820526E40891FD3FAAA2B5C /* ShortcutsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04EC2D72122694D96129D8A /* ShortcutsSettingsView.swift */; };
 		2034B8ED4C45CF5752B37B99 /* PopoverContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E583957A4D84097A895CCC3 /* PopoverContentView.swift */; };
 		218360C88C2C14B576713C36 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69EC50B3E2ED6DC2C7BBCD80 /* ItemDetailView.swift */; };
 		21C56793CC72F8C97109018B /* SmartCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E931BD054C062700D056AF5 /* SmartCollection.swift */; };
@@ -88,7 +87,6 @@
 		A1C10B58DE2302268ADBEF43 /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A9532214AEDD5A0411CB42 /* Snippet.swift */; };
 		A6A9669497FE469A809B1D12 /* TimeGrouperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F48D0FF7ABF86EFF96C7D37 /* TimeGrouperTests.swift */; };
 		A85F12EC10D0B4516CB0A6DC /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A9532214AEDD5A0411CB42 /* Snippet.swift */; };
-		A94E9C7DFCA101E266546802 /* KeyboardShortcutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0FC28A94D8EF35B411BEAB /* KeyboardShortcutManager.swift */; };
 		AB47FD8D0E21CC244A058FF5 /* Date+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66898F1B2F0B20773F034E4 /* Date+Formatting.swift */; };
 		AC7F94BFC9F7EDD3AFC032BC /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE57BAE521DA4947AC2A76E1 /* UserPreferences.swift */; };
 		ADDBA29CB78C374CF068ADA8 /* ClipboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5119E9329121073E147597CC /* ClipboardItem.swift */; };
@@ -237,7 +235,6 @@
 		B99A93EE4124D5735F769F0F /* SemanticSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticSearchService.swift; sourceTree = "<group>"; };
 		BD8D0DCFA9E7290BB9DE9AB2 /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
 		BE57BAE521DA4947AC2A76E1 /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
-		BF0FC28A94D8EF35B411BEAB /* KeyboardShortcutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutManager.swift; sourceTree = "<group>"; };
 		C061AA473E862A46CF3ADEAB /* String+Truncation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Truncation.swift"; sourceTree = "<group>"; };
 		C9B93FC09068CBC151FAA144 /* StatCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCardView.swift; sourceTree = "<group>"; };
 		D0D4A6F6011C07F68D467114 /* NaturalLanguageSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalLanguageSearchTests.swift; sourceTree = "<group>"; };
@@ -245,7 +242,6 @@
 		D59EDF39A2A6B1A057F9DBE0 /* SyntaxHighlightedText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlightedText.swift; sourceTree = "<group>"; };
 		D74AF4DF48DDA693E7C41544 /* LLMSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMSearchService.swift; sourceTree = "<group>"; };
 		DE67BAA65A332C5C52CA0347 /* DeleteButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteButton.swift; sourceTree = "<group>"; };
-		E04EC2D72122694D96129D8A /* ShortcutsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSettingsView.swift; sourceTree = "<group>"; };
 		E1F9BC984102702EECA6A4FC /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		E34B9A0919F54A2B893214FB /* ColorTransforms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTransforms.swift; sourceTree = "<group>"; };
 		E52A58FEE4D2E98F5D354C13 /* CopyButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyButton.swift; sourceTree = "<group>"; };
@@ -464,7 +460,6 @@
 				91CFBAB56E17D3F2008ECFAB /* ContentAnalyzer.swift */,
 				68801E8F16D5F0B146B4EF18 /* DiffEngine.swift */,
 				AC15C1F77BAD39774C1AA49D /* ExclusionListManager.swift */,
-				BF0FC28A94D8EF35B411BEAB /* KeyboardShortcutManager.swift */,
 				D74AF4DF48DDA693E7C41544 /* LLMSearchService.swift */,
 				5FA09ACD9FCE2B372DFC8D37 /* MarkdownRenderer.swift */,
 				F970B70000931A80DB9E862E /* NaturalLanguageSearchService.swift */,
@@ -530,7 +525,6 @@
 				39D369A5BA9EC495B6915FFF /* RulesSettingsView.swift */,
 				6FADBB9CBB04D93CED7A0731 /* SecuritySettingsView.swift */,
 				EE058F38D24D900772DF78B7 /* SettingsView.swift */,
-				E04EC2D72122694D96129D8A /* ShortcutsSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -713,7 +707,6 @@
 				24C35416B9D5F7FB1F8716DD /* HoverPreviewWindowController.swift in Sources */,
 				218360C88C2C14B576713C36 /* ItemDetailView.swift in Sources */,
 				0A6ABA854D363923090D3C8A /* JSONTransforms.swift in Sources */,
-				A94E9C7DFCA101E266546802 /* KeyboardShortcutManager.swift in Sources */,
 				550271D1783D99645A3D29C7 /* LLMSearchService.swift in Sources */,
 				045AA3C98D61F702BD0DB94C /* MarkdownRenderer.swift in Sources */,
 				2C54F024721CC831FB839D6A /* MarkdownTransform.swift in Sources */,
@@ -738,7 +731,6 @@
 				6A9918AE10DA98D769281A30 /* SensitiveDataDetector.swift in Sources */,
 				5C4E416242422DC545920336 /* SettingsView.swift in Sources */,
 				F5382B4840CC3D635F3378F8 /* ShareService.swift in Sources */,
-				1820526E40891FD3FAAA2B5C /* ShortcutsSettingsView.swift in Sources */,
 				21C56793CC72F8C97109018B /* SmartCollection.swift in Sources */,
 				BF41A0FC492D7AA958496156 /* SmartCollectionService.swift in Sources */,
 				8DA450FACECFD3DC1CF932ED /* SmartCollectionsView.swift in Sources */,
