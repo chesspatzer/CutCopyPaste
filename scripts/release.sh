@@ -179,7 +179,18 @@ if [ -n "$DEVELOPER_ID" ]; then
     echo "   Signed with: $DEVELOPER_ID"
     codesign -dv "$APP_PATH" 2>&1 | grep -E "(Authority|TeamIdentifier)" | sed 's/^/   /'
 else
-    echo "   Skipping (no Developer ID). App is ad-hoc signed from archive."
+    # Ad-hoc re-sign everything with consistent identity
+    # Without this, Sparkle.framework has a different Team ID than the main
+    # binary and macOS refuses to load it (dyld Team ID mismatch error)
+    echo "   Re-signing with ad-hoc identity (consistent Team ID)..."
+
+    find "$APP_PATH/Contents/Frameworks" -name "*.dylib" -exec codesign --force --sign - {} \; 2>/dev/null
+    find "$APP_PATH" -name "*.xpc" -type d -exec codesign --force --sign - {} \; 2>/dev/null
+    find "$APP_PATH" -name "*.app" -not -path "$APP_PATH" -type d -exec codesign --force --sign - {} \; 2>/dev/null
+    find "$APP_PATH/Contents/Frameworks" -name "*.framework" -type d -exec codesign --force --sign - {} \; 2>/dev/null
+    codesign --force --sign - "$APP_PATH"
+
+    echo "   Ad-hoc signed (all components have consistent identity)."
 fi
 
 # ── Step 6: Notarize ──
