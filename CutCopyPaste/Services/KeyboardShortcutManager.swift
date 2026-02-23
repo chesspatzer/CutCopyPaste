@@ -5,6 +5,7 @@ import os
 final class KeyboardShortcutManager: ObservableObject {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var globalMonitor: Any?
     private let logger = Logger(subsystem: "com.cutcopypaste.app", category: "Shortcuts")
 
     @Published var isRegistered: Bool = false
@@ -15,6 +16,35 @@ final class KeyboardShortcutManager: ObservableObject {
     func register() {
         guard !isRegistered else { return }
 
+        #if APPSTORE
+        // Sandbox-compatible: observe global key events (cannot consume them,
+        // but Cmd+Shift+V has no conflicts in standard apps)
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return }
+
+            let keyCode = Int(event.keyCode)
+            let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
+
+            let prefs = UserPreferences.shared
+            let targetKey = prefs.globalToggleKeyCode
+            let storedFlags = UInt64(prefs.globalToggleModifiers)
+
+            var targetNSFlags: NSEvent.ModifierFlags = []
+            if storedFlags & CGEventFlags.maskCommand.rawValue != 0 { targetNSFlags.insert(.command) }
+            if storedFlags & CGEventFlags.maskShift.rawValue != 0 { targetNSFlags.insert(.shift) }
+            if storedFlags & CGEventFlags.maskAlternate.rawValue != 0 { targetNSFlags.insert(.option) }
+            if storedFlags & CGEventFlags.maskControl.rawValue != 0 { targetNSFlags.insert(.control) }
+
+            if keyCode == targetKey && flags == targetNSFlags {
+                DispatchQueue.main.async {
+                    self.onTogglePopover?()
+                }
+            }
+        }
+        isRegistered = true
+        needsAccessibilityPermission = false
+        logger.info("Global hotkey registered (sandbox mode)")
+        #else
         let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
 
         let callback: CGEventTapCallBack = { _, _, event, refcon in
@@ -61,9 +91,16 @@ final class KeyboardShortcutManager: ObservableObject {
         isRegistered = true
         needsAccessibilityPermission = false
         logger.info("Global hotkey registered")
+        #endif
     }
 
     func unregister() {
+        #if APPSTORE
+        if let monitor = globalMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalMonitor = nil
+        }
+        #else
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
@@ -72,14 +109,17 @@ final class KeyboardShortcutManager: ObservableObject {
         }
         eventTap = nil
         runLoopSource = nil
+        #endif
         isRegistered = false
         logger.info("Global hotkey unregistered")
     }
 
+    #if !APPSTORE
     func openAccessibilitySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
         NSWorkspace.shared.open(url)
     }
+    #endif
 
     deinit {
         unregister()

@@ -41,6 +41,7 @@ struct ShortcutsSettingsView: View {
                     .animation(Constants.Animation.quick, value: isRecording)
                 }
 
+                #if !APPSTORE
                 if appState.shortcutManager.needsAccessibilityPermission {
                     HStack(spacing: 10) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -64,6 +65,7 @@ struct ShortcutsSettingsView: View {
                     }
                     .padding(.vertical, 4)
                 }
+                #endif
             } header: {
                 Text("Global Shortcut")
             } footer: {

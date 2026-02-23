@@ -271,6 +271,19 @@ ccp search "query"
 
 ---
 
+## Installation
+
+### Direct Download
+Download the latest DMG from [GitHub Releases](https://github.com/chesspatzer/CutCopyPaste/releases). The app checks for updates automatically via Sparkle — you can also check manually from **Settings > About > Check for Updates**.
+
+### Mac App Store
+Also available on the Mac App Store (sandboxed build). The App Store version has a few limitations compared to the direct download:
+- Auto-paste (simulated Cmd+V) is disabled — you press Cmd+V manually after copying
+- Workspace detection uses app name only (no window title extraction)
+- Global hotkey works but cannot consume the key event
+
+---
+
 ## Building
 
 Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) and Xcode 26+ (for Foundation Models support; Xcode 15+ for basic build).
@@ -279,8 +292,11 @@ Requires [XcodeGen](https://github.com/yonaskolb/XcodeGen) and Xcode 26+ (for Fo
 # Generate the Xcode project
 xcodegen generate
 
-# Build the GUI app
+# Build the direct distribution version (with Sparkle OTA updates)
 xcodebuild -scheme CutCopyPaste -destination 'platform=macOS' build
+
+# Build the App Store version (sandboxed)
+xcodebuild -scheme CutCopyPaste-AppStore -destination 'platform=macOS' build
 
 # Build the CLI tool
 xcodebuild -scheme CutCopyPasteCLI -destination 'platform=macOS' build
@@ -288,13 +304,15 @@ xcodebuild -scheme CutCopyPasteCLI -destination 'platform=macOS' build
 
 Or open `CutCopyPaste.xcodeproj` in Xcode and run the **CutCopyPaste** scheme.
 
+The project uses an `APPSTORE` compiler flag to control behavioral differences between the two builds. The `CutCopyPaste-AppStore` scheme archives with the `Release-AppStore` configuration, which enables App Sandbox and compiles out Sparkle.
+
 ---
 
 ## Architecture
 
 - **100% SwiftUI + SwiftData** — no UIKit, no Core Data
-- **No third-party dependencies** for the main app (CLI uses swift-argument-parser)
-- **No internet access** — everything runs locally using Apple frameworks (Foundation Models for LLM search, Vision for OCR, NaturalLanguage for NLP, Charts for analytics)
+- **Sparkle** for OTA updates (direct distribution only; compiled out for App Store)
+- **No internet access** — everything runs locally using Apple frameworks (Foundation Models for LLM search, Vision for OCR, NaturalLanguage for NLP, Charts for analytics). The only network use is Sparkle checking for updates.
 - **Strict concurrency** — `@MainActor` isolated AppState, `@ModelActor` services
 
 ### Project Structure

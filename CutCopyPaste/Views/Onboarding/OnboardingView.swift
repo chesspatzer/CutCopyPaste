@@ -47,12 +47,14 @@ struct OnboardingView: View {
             .tabViewStyle(.automatic)
             .frame(height: 320)
 
+            #if !APPSTORE
             // Accessibility permission prompt (shown on last page)
             if currentPage == pages.count - 1 {
                 accessibilityPrompt
                     .padding(.horizontal, 24)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+            #endif
 
             Spacer()
 
@@ -128,6 +130,7 @@ struct OnboardingView: View {
         }
     }
 
+    #if !APPSTORE
     private var accessibilityPrompt: some View {
         VStack(spacing: 8) {
             if appState.shortcutManager.needsAccessibilityPermission {
@@ -159,6 +162,7 @@ struct OnboardingView: View {
             }
         }
     }
+    #endif
 }
 
 // MARK: - Model

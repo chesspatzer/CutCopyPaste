@@ -7,10 +7,18 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
 
+configs:
+  Debug: debug
+  Release: release
+  Release-AppStore: release
+
 packages:
   swift-argument-parser:
     url: https://github.com/apple/swift-argument-parser.git
     from: "1.3.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle.git
+    from: "2.6.0"
 
 settings:
   base:
@@ -25,6 +33,9 @@ targets:
       - path: CutCopyPaste
         excludes:
           - "**/*.entitlements"
+    dependencies:
+      - package: Sparkle
+        product: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cutcopypaste.app
@@ -39,6 +50,13 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: true
         SWIFT_STRICT_CONCURRENCY: complete
+      configs:
+        Release-AppStore:
+          CODE_SIGN_ENTITLEMENTS: CutCopyPaste/Resources/CutCopyPaste-AppStore.entitlements
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) APPSTORE"
+    infoPlist:
+      SUFeedURL: "https://github.com/chesspatzer/CutCopyPaste/releases/latest/download/appcast.xml"
+      SUPublicEDKey: "REPLACE_WITH_YOUR_EDDSA_PUBLIC_KEY"
     entitlements:
       path: CutCopyPaste/Resources/CutCopyPaste.entitlements
 
@@ -69,3 +87,27 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cutcopypaste.app.tests
         GENERATE_INFOPLIST_FILE: true
+
+schemes:
+  CutCopyPaste:
+    build:
+      targets:
+        CutCopyPaste: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  CutCopyPaste-AppStore:
+    build:
+      targets:
+        CutCopyPaste: all
+    run:
+      config: Debug
+    archive:
+      config: Release-AppStore
+
+  CutCopyPasteCLI:
+    build:
+      targets:
+        CutCopyPasteCLI: all

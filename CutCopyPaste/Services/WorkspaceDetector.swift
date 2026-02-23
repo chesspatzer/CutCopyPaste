@@ -42,6 +42,10 @@ final class WorkspaceDetector {
     // MARK: - Window Title Extraction
 
     private func getFrontmostWindowTitle(pid: pid_t) -> String? {
+        #if APPSTORE
+        // CGWindowListCopyWindowInfo is not available in App Sandbox
+        return nil
+        #else
         let options: CGWindowListOption = [.excludeDesktopElements, .optionOnScreenOnly]
         guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
             return nil
@@ -53,6 +57,7 @@ final class WorkspaceDetector {
         }.flatMap {
             $0[kCGWindowName as String] as? String
         }
+        #endif
     }
 
     // MARK: - App-specific detection

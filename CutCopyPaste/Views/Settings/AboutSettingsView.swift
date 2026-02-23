@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct AboutSettingsView: View {
+    #if !APPSTORE
+    @ObservedObject private var updaterService = UpdaterService.shared
+    #endif
+
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
@@ -47,6 +51,15 @@ struct AboutSettingsView: View {
                 infoRow(label: "SwiftUI + SwiftData", value: "No third-party deps")
             }
             .padding(.horizontal, 30)
+
+            #if !APPSTORE
+            Button("Check for Updates...") {
+                updaterService.checkForUpdates()
+            }
+            .disabled(!updaterService.canCheckForUpdates)
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
+            #endif
 
             Spacer()
 

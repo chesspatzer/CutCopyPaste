@@ -79,6 +79,10 @@ final class ShareService {
     /// Attempts to create a GitHub Gist using the `gh` CLI.
     /// Returns the gist URL if successful, nil if gh is not available.
     func createGist(_ text: String, filename: String, description: String) -> String? {
+        #if APPSTORE
+        // Subprocess execution is not allowed in App Sandbox
+        return nil
+        #else
         // Write content to a temp file
         let tempDir = FileManager.default.temporaryDirectory
         let tempFile = tempDir.appendingPathComponent(filename)
@@ -115,5 +119,6 @@ final class ShareService {
         }
 
         return nil
+        #endif
     }
 }

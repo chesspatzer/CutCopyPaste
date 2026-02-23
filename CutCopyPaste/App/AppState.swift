@@ -15,6 +15,9 @@ final class AppState: ObservableObject {
     /// Main-context handle for delete operations — avoids @ModelActor cross-context detachment crashes
     private let mainContext: ModelContext
 
+    // Updater (Sparkle — compiled out for App Store)
+    let updaterService = UpdaterService.shared
+
     // Feature Services
     let transformService = TransformService.shared
     let snippetService: SnippetService
@@ -236,11 +239,12 @@ final class AppState: ObservableObject {
         }
 
         if autoPaste {
-            // Close the popover, then simulate Cmd+V in the frontmost app
             dismissPopover()
+            #if !APPSTORE
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 Self.simulatePaste()
             }
+            #endif
         }
 
         // Resume monitoring after a brief delay to skip our own paste
@@ -259,6 +263,7 @@ final class AppState: ObservableObject {
         }
     }
 
+    #if !APPSTORE
     /// Simulate Cmd+V key press to paste into the frontmost application
     private static func simulatePaste() {
         let source = CGEventSource(stateID: .hidSystemState)
@@ -270,6 +275,7 @@ final class AppState: ObservableObject {
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
     }
+    #endif
 
     func copyText(_ text: String) {
         clipboardMonitor.stopMonitoring()
