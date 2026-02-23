@@ -6,6 +6,22 @@ A powerful macOS menubar clipboard manager built with SwiftUI and SwiftData. Run
 
 ---
 
+## Screenshots
+
+| Dark Mode — Search & Actions | Dark Mode — Syntax Highlighting |
+|---|---|
+| ![Dark mode with search, markdown rendering, and actions menu](Resources/Screenshots/Darkmode-full-example-1.png) | ![Dark mode with Swift syntax highlighting](Resources/Screenshots/Darkmode-swift-ui-syntax-highlight.png) |
+
+| Light Mode — Link Preview | Light Mode — Markdown & OCR |
+|---|---|
+| ![Light mode showing link card preview](Resources/Screenshots/Lightmode-links.png) | ![Light mode with markdown rendering and image OCR](Resources/Screenshots/Lightmode-preview-markdown.png) |
+
+| Light Mode — Detail Preview | Smart Collections |
+|---|---|
+| ![Light mode showing item detail with transforms and OCR](Resources/Screenshots/Lightmode-preview.png) | ![Smart collections grid view](Resources/Screenshots/Darkmode-collections.png) |
+
+---
+
 ## Features
 
 ### Clipboard History
