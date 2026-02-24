@@ -91,7 +91,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     }
 }
 
-final class UserPreferences: ObservableObject {
+final class UserPreferences: ObservableObject, @unchecked Sendable {
     static let shared = UserPreferences()
 
     // MARK: - History

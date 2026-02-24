@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-final class MarkdownRenderer {
+final class MarkdownRenderer: @unchecked Sendable {
     static let shared = MarkdownRenderer()
 
     /// Cache rendered output to avoid re-rendering the same text
@@ -13,26 +13,33 @@ final class MarkdownRenderer {
         let fontSize: CGFloat
     }
 
-    /// Cache compiled regex objects
+    /// Cache compiled regex objects (bounded — regex patterns are finite per renderer)
     private var regexCache: [String: NSRegularExpression] = [:]
 
     private func cachedRegex(_ pattern: String) -> NSRegularExpression? {
         if let cached = regexCache[pattern] { return cached }
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        if regexCache.count > 100 { regexCache.removeAll(keepingCapacity: true) }
         regexCache[pattern] = regex
         return regex
     }
 
     // MARK: - Markdown Detection
 
-    /// Cache for isMarkdown results — avoids repeated regex checks for the same text
-    private static var isMarkdownCache: [Int: Bool] = [:]
+    /// Bounded cache for isMarkdown results — keyed by text hash.
+    /// Uses FIFO eviction: once full, removes oldest half to amortize cost.
+    nonisolated(unsafe) private static var isMarkdownCache: [Int: Bool] = [:]
+    private static let isMarkdownCacheLimit = 500
 
     static func isMarkdown(_ text: String) -> Bool {
         let hash = text.hashValue
         if let cached = isMarkdownCache[hash] { return cached }
         let result = _isMarkdown(text)
-        if isMarkdownCache.count > 200 { isMarkdownCache.removeAll() }
+        if isMarkdownCache.count >= isMarkdownCacheLimit {
+            // Evict half the cache to avoid thrashing on every insert
+            let keysToRemove = Array(isMarkdownCache.keys.prefix(isMarkdownCacheLimit / 2))
+            for key in keysToRemove { isMarkdownCache.removeValue(forKey: key) }
+        }
         isMarkdownCache[hash] = result
         return result
     }

@@ -3,9 +3,16 @@ import SwiftUI
 struct SearchBarView: View {
     @Binding var text: String
     @Binding var searchMode: SearchMode
+
     @FocusState private var isFocused: Bool
     @State private var isHovered = false
     @State private var isInvalidRegex = false
+
+    // Local text for the TextField — typing updates only this @State,
+    // avoiding @Published churn on AppState that would rebuild the entire view tree.
+    // Changes push to the binding after a 300ms debounce.
+    @State private var localText: String = ""
+    @State private var debounceTask: Task<Void, Never>?
 
     private var isRegex: Bool { searchMode == .regex }
 
@@ -42,26 +49,38 @@ struct SearchBarView: View {
         .padding(.vertical, 9)
         .background { searchBackground }
         .onHover { isHovered = $0 }
-        .animation(Constants.Animation.quick, value: isFocused)
-        .animation(Constants.Animation.quick, value: searchMode)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Search clipboard history")
-        .onAppear { isFocused = true }
-        .onChange(of: text) {
-            if isRegex && !text.isEmpty {
-                isInvalidRegex = (try? NSRegularExpression(pattern: text)) == nil
+        .onAppear {
+            isFocused = true
+            localText = text
+        }
+        .onChange(of: text) { _, newValue in
+            // Sync from parent (e.g. programmatic clear)
+            if newValue != localText { localText = newValue }
+        }
+        .onChange(of: localText) { _, newValue in
+            // Validate regex immediately for visual feedback
+            if isRegex && !newValue.isEmpty {
+                isInvalidRegex = (try? NSRegularExpression(pattern: newValue)) == nil
             } else {
                 isInvalidRegex = false
+            }
+
+            // Debounce: push to binding after 300ms of no typing
+            debounceTask?.cancel()
+            debounceTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+                text = newValue
             }
         }
     }
 
     private var modeToggleButton: some View {
         Button {
-            withAnimation(Constants.Animation.quick) {
-                searchMode = isRegex ? .natural : .regex
-                isInvalidRegex = false
-            }
+            searchMode = isRegex ? .natural : .regex
+            isInvalidRegex = false
         } label: {
             Image(systemName: modeIcon)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
@@ -74,7 +93,7 @@ struct SearchBarView: View {
     }
 
     private var searchTextField: some View {
-        TextField(isRegex ? "Regex pattern..." : "Search your clipboard...", text: $text)
+        TextField(isRegex ? "Regex pattern..." : "Search your clipboard...", text: $localText)
             .textFieldStyle(.plain)
             .font(searchFont)
             .focused($isFocused)
@@ -87,25 +106,23 @@ struct SearchBarView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.orange)
                 .help("Invalid regex pattern")
-                .transition(.scale.combined(with: .opacity))
         }
     }
 
     @ViewBuilder
     private var clearButton: some View {
-        if !text.isEmpty {
+        if !localText.isEmpty {
             Button {
-                withAnimation(Constants.Animation.quick) {
-                    text = ""
-                    isInvalidRegex = false
-                }
+                localText = ""
+                text = ""
+                isInvalidRegex = false
+                debounceTask?.cancel()
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 13, design: .rounded))
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .transition(.scale.combined(with: .opacity))
         }
     }
 

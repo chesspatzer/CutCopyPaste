@@ -1,7 +1,7 @@
 import Foundation
 
 /// Provides built-in smart collections for auto-grouping clipboard items.
-final class SmartCollectionService {
+final class SmartCollectionService: @unchecked Sendable {
     static let shared = SmartCollectionService()
     private init() {}
 

@@ -10,9 +10,14 @@ struct ClipboardListView: View {
     let onPastePlain: (ClipboardItem) -> Void
     let onPin: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
+    var onLoadMore: ((ClipboardItem) -> Void)? = nil
 
     @AppStorage("timeGroupedHistory") private var timeGroupedHistory: Bool = true
     @State private var selectedIndex: Int? = nil
+    @State private var cachedSections: [TimeGrouper.Section] = []
+    @State private var cachedItemCount: Int = 0
+    @State private var cachedFirstID: UUID?
+    @State private var cachedLastID: UUID?
 
     private var selectedItemID: UUID? {
         guard let idx = selectedIndex, idx < items.count else { return nil }
@@ -47,10 +52,25 @@ struct ClipboardListView: View {
                 selectedIndex = nil
                 return .handled
             }
-            .onChange(of: items.count) {
+            .onAppear { recomputeSectionsIfNeeded() }
+            .onChange(of: items.count) { _, _ in
                 selectedIndex = nil
+                recomputeSectionsIfNeeded()
             }
+            .onChange(of: items.first?.id) { _, _ in recomputeSectionsIfNeeded() }
+            .onChange(of: items.last?.id) { _, _ in recomputeSectionsIfNeeded() }
         }
+    }
+
+    private func recomputeSectionsIfNeeded() {
+        let count = items.count
+        let firstID = items.first?.id
+        let lastID = items.last?.id
+        guard count != cachedItemCount || firstID != cachedFirstID || lastID != cachedLastID else { return }
+        cachedItemCount = count
+        cachedFirstID = firstID
+        cachedLastID = lastID
+        cachedSections = TimeGrouper.group(items)
     }
 
     // MARK: - Flat List (no grouping)
@@ -68,9 +88,8 @@ struct ClipboardListView: View {
     // MARK: - Time-Grouped List
 
     private var groupedContent: some View {
-        let sections = TimeGrouper.group(items)
-        return LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
-            ForEach(sections) { section in
+        LazyVStack(spacing: displayMode == .compact ? 3 : Constants.UI.cardSpacing) {
+            ForEach(cachedSections) { section in
                 // Section header
                 HStack(spacing: 6) {
                     Text(section.title)
@@ -84,7 +103,7 @@ struct ClipboardListView: View {
                         .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, displayMode == .compact ? 8 : 12)
-                .padding(.top, section.id == sections.first?.id ? 4 : 10)
+                .padding(.top, section.id == cachedSections.first?.id ? 4 : 10)
                 .padding(.bottom, 2)
 
                 ForEach(section.items) { item in
@@ -113,6 +132,7 @@ struct ClipboardListView: View {
             onDelete: { onDelete(item) }
         )
         .id(item.id)
+        .onAppear { onLoadMore?(item) }
     }
 
     private func moveSelection(by offset: Int, proxy: ScrollViewProxy) {

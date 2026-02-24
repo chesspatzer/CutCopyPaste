@@ -1,7 +1,7 @@
 import AppKit
 
 /// Handles exporting and sharing clipboard items in various formats.
-final class ShareService {
+final class ShareService: @unchecked Sendable {
     static let shared = ShareService()
     private init() {}
 

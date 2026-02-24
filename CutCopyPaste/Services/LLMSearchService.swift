@@ -28,7 +28,7 @@ struct LLMSearchIntentOutput {
 // MARK: - LLM Search Service
 
 @available(macOS 26, *)
-final class LLMSearchService {
+final class LLMSearchService: @unchecked Sendable {
     static let shared = LLMSearchService()
 
     private let systemInstructions = """

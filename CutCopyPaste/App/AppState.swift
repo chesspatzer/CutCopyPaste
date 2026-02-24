@@ -30,6 +30,27 @@ final class AppState: ObservableObject {
     @Published var clipboardItems: [ClipboardItem] = []
     @Published var selectedWorkspace: String? = nil
 
+    // Pagination — only expose a small window of items to keep SwiftUI diffing fast.
+    private static let initialPageSize = 20
+    private static let nextPageSize = 10
+    private var visibleItemLimit: Int = AppState.initialPageSize
+
+    /// The paginated slice passed to ClipboardListView.
+    @Published var visibleItems: [ClipboardItem] = []
+
+    private func updateVisibleItems() {
+        visibleItems = Array(clipboardItems.prefix(visibleItemLimit))
+    }
+
+    /// Load the next page when the user scrolls to the last visible item.
+    func loadMoreIfNeeded(currentItem: ClipboardItem) {
+        // Only trigger on the very last item to prevent LazyVStack prefetch cascading
+        guard currentItem.id == visibleItems.last?.id,
+              visibleItemLimit < clipboardItems.count else { return }
+        visibleItemLimit = min(visibleItemLimit + Self.nextPageSize, clipboardItems.count)
+        updateVisibleItems()
+    }
+
     // UI State — Diff
     @Published var diffSelection: [ClipboardItem] = []
     @Published var showDiffView: Bool = false
@@ -46,10 +67,6 @@ final class AppState: ObservableObject {
     @Published var detailItem: ClipboardItem? = nil
     @Published var ocrResultItem: ClipboardItem? = nil
 
-    // UI State — Undo delete
-    @Published var lastDeletedSnapshot: ClipboardItemSnapshot? = nil
-    @Published var showUndoToast: Bool = false
-
     // UI State — Onboarding
     @Published var showOnboarding: Bool = false
 
@@ -65,7 +82,7 @@ final class AppState: ObservableObject {
 
     // UI State — Hover Preview
     @Published var hoverPreviewItem: ClipboardItem? = nil
-    @Published var hoverPreviewCardFrame: CGRect = .zero
+    var hoverPreviewCardFrame: CGRect = .zero
     private var hoverShowWorkItem: DispatchWorkItem?
     private var hoverDismissWorkItem: DispatchWorkItem?
     private var isHoverCardHovered = false
@@ -101,19 +118,27 @@ final class AppState: ObservableObject {
             self?.unseenCopyCount += 1
         }
 
-        // Forward ClipboardMonitor changes to trigger SwiftUI updates
-        // (nested ObservableObject @Published properties are not observed automatically)
-        clipboardMonitor.objectWillChange
+        // Forward only the specific ClipboardMonitor properties that the UI reads.
+        // Forwarding objectWillChange wholesale caused full view-tree rebuilds on
+        // every clipboard poll tick, which was a major source of scroll lag.
+        clipboardMonitor.$isMonitoring
+            .removeDuplicates()
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+        clipboardMonitor.$skipNextCapture
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
-        // Observe search and category changes with debounce
+        // Observe search and category changes.
+        // SearchBarView already debounces text input locally, so searchText
+        // only updates after the user stops typing — no extra debounce needed.
         $searchText
-            .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
+            .removeDuplicates()
             .combineLatest($selectedCategory, $selectedWorkspace, $searchMode)
+            .dropFirst() // skip initial emission
             .sink { [weak self] _, _, _, _ in
                 self?.refreshItems()
             }
@@ -201,6 +226,8 @@ final class AppState: ObservableObject {
 
             await MainActor.run {
                 self.clipboardItems = items
+                self.visibleItemLimit = Self.initialPageSize
+                self.updateVisibleItems()
             }
         }
     }
@@ -330,41 +357,28 @@ final class AppState: ObservableObject {
     func deleteItem(_ item: ClipboardItem) {
         NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
 
-        // Snapshot item data for undo before deleting
-        let snapshot = ClipboardItemSnapshot(item)
-        lastDeletedSnapshot = snapshot
-        showUndoToast = true
+        let itemID = item.id
 
-        // Delete on the MAIN context — same context SwiftUI observes.
-        // This ensures SwiftUI processes the removal in the same run-loop
-        // tick and never tries to render a detached model object.
+        // Mark deleted on main context (prevents cross-context detachment)
         mainContext.delete(item)
-        try? mainContext.save()
-        clipboardItems.removeAll { $0.id == snapshot.id }
 
-        // Auto-dismiss undo toast after 4 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
-            guard let self, self.lastDeletedSnapshot?.id == snapshot.id else { return }
-            withAnimation(Constants.Animation.smooth) {
-                self.showUndoToast = false
-                self.lastDeletedSnapshot = nil
-            }
-        }
-    }
+        // Remove from UI arrays
+        clipboardItems.removeAll { $0.id == itemID }
+        updateVisibleItems()
 
-    func undoDelete() {
-        guard let snapshot = lastDeletedSnapshot else { return }
-        let restored = snapshot.toClipboardItem()
-        mainContext.insert(restored)
-        try? mainContext.save()
-        refreshItems()
-        withAnimation(Constants.Animation.snappy) {
-            showUndoToast = false
-            lastDeletedSnapshot = nil
-        }
+        // No explicit save() — mainContext.autosaveEnabled is true by default,
+        // so SwiftData persists the deletion automatically without blocking
+        // the main thread with synchronous SQLite I/O.
     }
 
     func clearAll() {
+        // Clear the UI array first so SwiftUI releases references
+        // before the background context deletes the backing data.
+        let pinned = clipboardItems.filter { $0.isPinned }
+        clipboardItems = pinned
+        visibleItemLimit = Self.initialPageSize
+        updateVisibleItems()
+        diffSelection.removeAll()
         Task {
             await storageService.clearAll(keepPinned: true)
             refreshItems()

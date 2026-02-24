@@ -73,7 +73,7 @@ enum Constants {
     }
 
     enum HoverPreview {
-        static let showDelay: TimeInterval = 0.5
+        static let showDelay: TimeInterval = 2.0
         static let dismissDelay: TimeInterval = 0.15
         static let maxHeight: CGFloat = 500
         static let panelWidth: CGFloat = 380

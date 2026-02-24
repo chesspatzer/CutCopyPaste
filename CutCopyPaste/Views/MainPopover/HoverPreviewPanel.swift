@@ -8,6 +8,8 @@ struct HoverPreviewPanel: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var loadedImage: NSImage?
+    @State private var renderedAttr: AttributedString?
+    @State private var renderKey: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -108,19 +110,52 @@ struct HoverPreviewPanel: View {
 
     // MARK: - Text Content
 
+    /// Whether this item needs syntax/markdown rendering (code or markdown).
+    private var needsRendering: Bool {
+        !item.isMasked && (item.detectedLanguage != nil || item.isMarkdown)
+    }
+
+    /// Stable key for the rendered content cache.
+    private var currentRenderKey: Int {
+        var h = Hasher()
+        h.combine(item.textContent)
+        h.combine(colorScheme == .dark)
+        return h.finalize()
+    }
+
     @ViewBuilder
     private var textContent: some View {
         if item.isMasked {
             Text(String(repeating: "*", count: min(item.textContent?.count ?? 0, 200)))
                 .font(Constants.Typography.body)
                 .foregroundStyle(.secondary)
-        } else if let lang = item.detectedLanguage, let text = item.textContent {
-            // Full syntax-highlighted code — no line limit
-            fullCodeView(text: text, language: lang)
-        } else if item.isMarkdown || MarkdownRenderer.isMarkdown(item.textContent ?? "") {
-            if let text = item.textContent {
-                // Full rendered markdown — no line limit
-                fullMarkdownView(text: text)
+        } else if needsRendering, let text = item.textContent {
+            // Show cached rendered text, or plain text placeholder while rendering
+            let previewText = String(text.prefix(5000))
+            Group {
+                if let attr = (currentRenderKey == renderKey) ? renderedAttr : nil {
+                    Text(attr)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                } else {
+                    Text(previewText)
+                        .font(item.detectedLanguage != nil
+                              ? .system(size: 12, design: .monospaced)
+                              : .system(size: 13))
+                        .foregroundStyle(.primary.opacity(0.85))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .onAppear { computeRendering(text: previewText) }
+                }
+            }
+            .padding(item.detectedLanguage != nil ? 8 : 0)
+            .background {
+                if item.detectedLanguage != nil {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(colorScheme == .dark
+                              ? Color.white.opacity(0.04)
+                              : Color.black.opacity(0.03))
+                }
             }
         } else if let text = item.textContent {
             Text(text)
@@ -147,49 +182,21 @@ struct HoverPreviewPanel: View {
         }
     }
 
-    private func fullCodeView(text: String, language: String) -> some View {
+    /// Renders syntax highlighting or markdown off the synchronous body path.
+    /// The view shows plain text immediately, then swaps in the styled version.
+    private func computeRendering(text: String) {
         let isDark = colorScheme == .dark
-        let nsAttr = SyntaxHighlighter.shared.highlight(text, language: language, isDark: isDark)
+        let key = currentRenderKey
+
+        let nsAttr: NSAttributedString
+        if let lang = item.detectedLanguage {
+            nsAttr = SyntaxHighlighter.shared.highlight(text, language: lang, isDark: isDark)
+        } else {
+            nsAttr = MarkdownRenderer.shared.render(text, isDark: isDark)
+        }
         let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
-
-        return Group {
-            if let swiftAttr {
-                Text(swiftAttr)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            } else {
-                Text(text)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(.primary.opacity(0.85))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            }
-        }
-        .padding(8)
-        .background {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isDark ? Color.white.opacity(0.04) : Color.black.opacity(0.03))
-        }
-    }
-
-    private func fullMarkdownView(text: String) -> some View {
-        let isDark = colorScheme == .dark
-        let nsAttr = MarkdownRenderer.shared.render(text, isDark: isDark)
-        let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
-
-        return Group {
-            if let swiftAttr {
-                Text(swiftAttr)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            } else {
-                Text(text)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.primary.opacity(0.85))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-            }
-        }
+        renderedAttr = swiftAttr
+        renderKey = key
     }
 
     // MARK: - Image Content

@@ -2,18 +2,27 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct TransferableClipboardData: Transferable, Sendable {
+    // Only store lightweight fields eagerly. External-storage blobs
+    // (rtfData, imageData) are captured lazily via closures so that
+    // scrolling through the list doesn't trigger disk I/O per row.
     let text: String?
-    let rtfData: Data?
-    let imageData: Data?
     let filePaths: [String]?
     let contentType: ClipboardItemType
+    private let _rtfData: @Sendable () -> Data?
+    private let _imageData: @Sendable () -> Data?
+
+    var rtfData: Data? { _rtfData() }
+    var imageData: Data? { _imageData() }
 
     init(from item: ClipboardItem) {
         self.text = item.textContent
-        self.rtfData = item.rtfData
-        self.imageData = item.imageData
         self.filePaths = item.filePaths
         self.contentType = item.contentType
+        // Capture the item weakly — blobs are only read when a drag
+        // actually starts, not when the row appears during scroll.
+        let itemID = item.id
+        self._rtfData = { [weak item] in item?.rtfData }
+        self._imageData = { [weak item] in item?.imageData }
     }
 
     static var transferRepresentation: some TransferRepresentation {

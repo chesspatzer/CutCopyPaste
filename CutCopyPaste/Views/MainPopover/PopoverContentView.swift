@@ -133,7 +133,7 @@ struct PopoverContentView: View {
                             .transition(.opacity)
                     } else {
                         ClipboardListView(
-                            items: appState.clipboardItems,
+                            items: appState.visibleItems,
                             displayMode: appState.preferences.displayMode,
                             showTimestamps: appState.preferences.showTimestamps,
                             showSourceApp: appState.preferences.showSourceApp,
@@ -141,7 +141,8 @@ struct PopoverContentView: View {
                             onAutoPaste: { item in appState.copyToClipboard(item, autoPaste: true) },
                             onPastePlain: { item in appState.copyToClipboardPlainText(item, autoPaste: true) },
                             onPin: { item in appState.togglePin(item) },
-                            onDelete: { item in appState.deleteItem(item) }
+                            onDelete: { item in appState.deleteItem(item) },
+                            onLoadMore: { item in appState.loadMoreIfNeeded(currentItem: item) }
                         )
                         .transition(.opacity)
                     }
@@ -274,26 +275,7 @@ struct PopoverContentView: View {
                 .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
 
-            // Undo delete toast
-            if appState.showUndoToast {
-                VStack {
-                    Spacer()
-                    undoToast
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 36)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
         }
-        .coordinateSpace(name: "popover")
-        .animation(Constants.Animation.snappy, value: appState.showDiffView)
-        .animation(Constants.Animation.snappy, value: appState.showTransformResult)
-        .animation(Constants.Animation.snappy, value: appState.showOnboarding)
-        .animation(Constants.Animation.snappy, value: appState.showUndoToast)
-        .animation(Constants.Animation.snappy, value: appState.showSmartCollections)
-        .animation(Constants.Animation.snappy, value: appState.activeSmartCollection?.id)
-        .animation(Constants.Animation.snappy, value: appState.clipboardMonitor.isMonitoring)
-        .animation(Constants.Animation.snappy, value: appState.clipboardMonitor.skipNextCapture)
         .onAppear {
             appState.unseenCopyCount = 0
         }
@@ -455,46 +437,6 @@ struct PopoverContentView: View {
         .background(Color.blue.opacity(0.08))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Compare bar, \(appState.diffSelection.count) of 2 items selected")
-    }
-
-    // MARK: - Undo Toast
-
-    private var undoToast: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "trash")
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
-
-            Text("Item deleted")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundStyle(.primary.opacity(0.8))
-
-            Spacer()
-
-            Button {
-                withAnimation(Constants.Animation.snappy) {
-                    appState.undoDelete()
-                }
-            } label: {
-                Text("Undo")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.accentColor)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
-                }
-                .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Item deleted. Tap undo to restore.")
     }
 
     // MARK: - Footer

@@ -61,7 +61,7 @@ enum SensitiveDataType: String, CaseIterable {
     }
 }
 
-final class SensitiveDataDetector {
+final class SensitiveDataDetector: @unchecked Sendable {
     static let shared = SensitiveDataDetector()
 
     private let patterns: [(SensitiveDataType, NSRegularExpression)]

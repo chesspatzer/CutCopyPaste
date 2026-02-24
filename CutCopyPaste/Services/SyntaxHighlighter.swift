@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Detects programming languages and produces syntax-highlighted AttributedStrings.
 /// Works entirely offline using regex-based tokenization.
-final class SyntaxHighlighter {
+final class SyntaxHighlighter: @unchecked Sendable {
     static let shared = SyntaxHighlighter()
     private init() {}
 
@@ -25,6 +25,7 @@ final class SyntaxHighlighter {
         let key = "\(pattern)|\(options.rawValue)"
         if let cached = regexCache[key] { return cached }
         guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return nil }
+        if regexCache.count > 150 { regexCache.removeAll(keepingCapacity: true) }
         regexCache[key] = regex
         return regex
     }

@@ -23,7 +23,7 @@ protocol ClipboardTransform: Identifiable {
     func apply(to text: String) -> Result<String, TransformError>
 }
 
-final class TransformService {
+final class TransformService: @unchecked Sendable {
     static let shared = TransformService()
 
     private var transforms: [any ClipboardTransform] = []

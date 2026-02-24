@@ -3,7 +3,7 @@ import AppKit.NSSound
 import Combine
 import os
 
-final class ClipboardMonitor: ObservableObject {
+final class ClipboardMonitor: ObservableObject, @unchecked Sendable {
     private let pasteboard = NSPasteboard.general
     private var timer: Timer?
     private var lastChangeCount: Int
@@ -119,34 +119,38 @@ final class ClipboardMonitor: ObservableObject {
             item.workspaceType = workspace.type.rawValue
         }
 
-        // Detect sensitive data
-        if UserPreferences.shared.detectSensitiveData, let text = item.textContent {
-            let matches = SensitiveDataDetector.shared.detect(in: text)
-            if !matches.isEmpty {
-                item.sensitiveDataTypes = matches.map(\.type.rawValue)
-                if UserPreferences.shared.autoMaskSensitive {
-                    item.isMasked = true
-                }
-            }
-        }
-
-        // Summarize long text
-        if let text = item.textContent, TextSummarizer.shared.shouldSummarize(text) {
-            item.summary = TextSummarizer.shared.summarize(text).oneLiner
-        }
-
-        // Detect markdown first — markdown documents contain code keywords
-        // in prose which causes false positives for language detection
-        if let text = item.textContent {
-            item.isMarkdown = MarkdownRenderer.isMarkdown(text)
-
-            // Only detect programming language if not markdown
-            if !item.isMarkdown {
-                item.detectedLanguage = SyntaxHighlighter.shared.detectLanguage(text)
-            }
-        }
+        // Move heavy analysis to background Task to keep clipboard capture snappy.
+        // Only workspace detection (lightweight) stays synchronous above.
 
         Task {
+            // Detect sensitive data (cap scan to first 5000 chars for speed)
+            if UserPreferences.shared.detectSensitiveData, let text = item.textContent {
+                let scanText = text.count > 5000 ? String(text.prefix(5000)) : text
+                let matches = SensitiveDataDetector.shared.detect(in: scanText)
+                if !matches.isEmpty {
+                    item.sensitiveDataTypes = matches.map(\.type.rawValue)
+                    if UserPreferences.shared.autoMaskSensitive {
+                        item.isMasked = true
+                    }
+                }
+            }
+
+            // Summarize long text (skip very large text — NLP tokenization is expensive)
+            if let text = item.textContent, text.count < 10000,
+               TextSummarizer.shared.shouldSummarize(text) {
+                item.summary = TextSummarizer.shared.summarize(text).oneLiner
+            }
+
+            // Detect markdown — uses regex, moved off main thread
+            if let text = item.textContent {
+                item.isMarkdown = MarkdownRenderer.isMarkdown(text)
+
+                // Only detect programming language if not markdown
+                if !item.isMarkdown {
+                    item.detectedLanguage = SyntaxHighlighter.shared.detectLanguage(text)
+                }
+            }
+
             // Apply clipboard rules (auto-transforms)
             if let text = item.textContent, let ruleEngine {
                 let transformed = await ruleEngine.applyRules(

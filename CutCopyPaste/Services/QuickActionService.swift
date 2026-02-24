@@ -10,7 +10,7 @@ protocol QuickAction: Identifiable {
     func execute(item: ClipboardItem) -> String?
 }
 
-final class QuickActionService {
+final class QuickActionService: @unchecked Sendable {
     static let shared = QuickActionService()
 
     private let actions: [any QuickAction] = [

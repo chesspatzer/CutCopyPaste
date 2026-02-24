@@ -16,7 +16,7 @@ struct TextStats {
     let estimatedReadingTime: String
 }
 
-final class TextSummarizer {
+final class TextSummarizer: @unchecked Sendable {
     static let shared = TextSummarizer()
 
     let summaryThreshold = 200

@@ -63,6 +63,7 @@ struct RenderedMarkdownView: NSViewRepresentable {
 
 /// Lightweight pure-SwiftUI markdown preview for clipboard item cards.
 /// Uses SwiftUI Text(AttributedString) instead of NSViewRepresentable for fast scroll performance.
+/// Caches the rendered result in @State to avoid re-running MarkdownRenderer on every body evaluation.
 struct MarkdownPreviewView: View {
     let text: String
     let lineLimit: Int
@@ -70,18 +71,26 @@ struct MarkdownPreviewView: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    @State private var cachedAttr: AttributedString?
+    @State private var cacheKey: Int = 0
+
     private var previewHeight: CGFloat {
         isCompact ? 48 : 90
     }
 
-    var body: some View {
-        let isDark = colorScheme == .dark
-        let nsAttr = MarkdownRenderer.shared.render(previewText, isDark: isDark, fontSize: isCompact ? 11 : 12)
-        let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
+    /// Stable key combining text content + dark mode — only recompute when this changes.
+    private var currentKey: Int {
+        var hasher = Hasher()
+        hasher.combine(text)
+        hasher.combine(colorScheme == .dark)
+        return hasher.finalize()
+    }
 
+    var body: some View {
+        let key = currentKey
         VStack(alignment: .leading, spacing: 0) {
-            if let swiftAttr {
-                Text(swiftAttr)
+            if let attr = (key == cacheKey) ? cachedAttr : nil {
+                Text(attr)
                     .lineLimit(lineLimit)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
@@ -92,6 +101,7 @@ struct MarkdownPreviewView: View {
                     .truncationMode(.tail)
                     .foregroundStyle(.primary.opacity(0.85))
                     .frame(maxWidth: .infinity, maxHeight: previewHeight, alignment: .topLeading)
+                    .onAppear { computeRendered(key: key) }
             }
         }
         .padding(6)
@@ -101,11 +111,27 @@ struct MarkdownPreviewView: View {
                       ? Color.white.opacity(0.03)
                       : Color.black.opacity(0.02))
         }
+        .onChange(of: key) { _, newKey in
+            computeRendered(key: newKey)
+        }
+    }
+
+    private func computeRendered(key: Int) {
+        let isDark = colorScheme == .dark
+        let nsAttr = MarkdownRenderer.shared.render(previewText, isDark: isDark, fontSize: isCompact ? 11 : 12)
+        let swiftAttr = try? AttributedString(nsAttr, including: \.appKit)
+        cachedAttr = swiftAttr
+        cacheKey = key
     }
 
     private var previewText: String {
-        let lines = text.components(separatedBy: .newlines)
-        let limited = Array(lines.prefix(lineLimit))
-        return limited.joined(separator: "\n")
+        // Scan for the Nth newline instead of splitting the entire string
+        var count = 0
+        var endIndex = text.startIndex
+        while endIndex < text.endIndex && count < lineLimit {
+            if text[endIndex] == "\n" { count += 1 }
+            if count < lineLimit { endIndex = text.index(after: endIndex) }
+        }
+        return endIndex == text.endIndex ? text : String(text[text.startIndex..<endIndex])
     }
 }

@@ -8,7 +8,7 @@ struct SearchIntent {
     var isFuzzy: Bool = true
 }
 
-final class NaturalLanguageSearchService {
+final class NaturalLanguageSearchService: @unchecked Sendable {
     static let shared = NaturalLanguageSearchService()
 
     // MARK: - Synonym Dictionary

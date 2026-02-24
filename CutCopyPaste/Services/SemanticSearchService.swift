@@ -1,7 +1,7 @@
 import Foundation
 import NaturalLanguage
 
-final class SemanticSearchService {
+final class SemanticSearchService: @unchecked Sendable {
     static let shared = SemanticSearchService()
 
     private let sentenceEmbedding: NLEmbedding?

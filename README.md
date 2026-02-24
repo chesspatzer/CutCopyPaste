@@ -248,7 +248,7 @@ Clean, card-based design:
 - **Haptic feedback** on copy, pin, and delete actions
 - **Full VoiceOver support** — accessibility labels on all interactive elements
 - **High-contrast readability** — carefully tuned opacity levels and foreground styles for clear visibility in both light and dark modes
-- **Performance optimized** — LRU caches for syntax highlighting and markdown rendering, static caches for app icons and hex colors, lazy image loading, JPEG thumbnails for lower memory, stagger animations limited to visible items, batched database operations, coordinator-based NSView update skipping
+- **Performance optimized** — paginated list (20 initial, lazy load on demand), debounced search input decoupled from view tree, stripped per-row hover/animation overhead, bounded LRU caches for syntax highlighting and markdown rendering, async clipboard analysis off main thread, lazy image loading with JPEG thumbnails, batched database operations, coordinator-based NSView update skipping
 
 ---
 

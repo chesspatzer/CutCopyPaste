@@ -21,7 +21,7 @@ actor StorageService {
         filterType: ClipboardItemType? = nil,
         searchText: String = "",
         pinnedOnly: Bool = false,
-        limit: Int = 100
+        limit: Int = 50
     ) -> [ClipboardItem] {
         var descriptor = FetchDescriptor<ClipboardItem>(
             sortBy: [SortDescriptor(\.lastUsedAt, order: .reverse)]
@@ -141,7 +141,7 @@ actor StorageService {
         searchIntent: SearchIntent,
         pinnedOnly: Bool = false,
         workspaceName: String? = nil,
-        limit: Int = 100
+        limit: Int = 50
     ) -> [ClipboardItem] {
         var descriptor = FetchDescriptor<ClipboardItem>(
             sortBy: [SortDescriptor(\.lastUsedAt, order: .reverse)]
